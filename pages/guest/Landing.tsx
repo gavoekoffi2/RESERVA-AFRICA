@@ -9,7 +9,10 @@ const MOCK_DESTINATIONS = [
   'Assinie, Côte d\'Ivoire', 
   'Glidji, Togo',
   'Grand-Popo, Bénin', 
-  'Kara, Togo'
+  'Kara, Togo',
+  'Abidjan, Côte d\'Ivoire',
+  'Dakar, Sénégal',
+  'Accra, Ghana'
 ];
 
 type TabType = 'stays' | 'cars' | 'attractions' | 'taxi';
@@ -133,7 +136,15 @@ const AirbnbCalendar: React.FC<{
   );
 };
 
-const Landing: React.FC = () => {
+interface LandingProps {
+  detectedLocation?: {
+    city: string;
+    country: string;
+    currency: string;
+  };
+}
+
+const Landing: React.FC<LandingProps> = ({ detectedLocation }) => {
   const navigate = useNavigate();
   
   // --- State ---
@@ -157,6 +168,13 @@ const Landing: React.FC = () => {
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
+
+  // Use detected location to pre-fill search
+  useEffect(() => {
+    if (detectedLocation) {
+      setDestination(`${detectedLocation.city}, ${detectedLocation.country}`);
+    }
+  }, [detectedLocation]);
 
   // --- Handlers ---
   const handleSearch = () => {
@@ -378,10 +396,10 @@ const Landing: React.FC = () => {
           {/* Hero Text */}
           <div className="mt-20 text-center animate-fade-up" style={{animationDelay: '0.2s'}}>
              <h1 className="text-4xl md:text-7xl font-black text-white mb-6 drop-shadow-2xl tracking-tighter leading-tight relative z-10">
-                Le meilleur du <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary to-yellow-500">Togo</span> <br/> et de l'Afrique de l'Ouest.
+                Le meilleur du <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary to-yellow-500">{detectedLocation ? detectedLocation.country : 'Togo'}</span> <br/> et de l'Afrique de l'Ouest.
              </h1>
              <p className="text-lg text-white/90 font-medium max-w-2xl mx-auto drop-shadow-md relative z-10 bg-black/30 p-2 rounded-lg backdrop-blur-sm">
-                Trouvez les plus belles maisons, voitures et expériences au Togo, Bénin et Côte d'Ivoire.
+                Trouvez les plus belles maisons, voitures et expériences au {detectedLocation ? detectedLocation.country : 'Togo'} et ailleurs.
              </p>
           </div>
         </div>
@@ -390,7 +408,7 @@ const Landing: React.FC = () => {
       {/* --- SHOWCASE: HÉBERGEMENTS D'EXCEPTION AU TOGO --- */}
       <section className="py-20 px-4 md:px-10 max-w-[1400px] mx-auto w-full -mt-20 relative z-20">
          <div className="flex justify-between items-end mb-8">
-            <h2 className="text-3xl font-black text-white drop-shadow-lg">Hébergements d'exception à Lomé</h2>
+            <h2 className="text-3xl font-black text-white drop-shadow-lg">Hébergements d'exception à {detectedLocation ? detectedLocation.city : 'Lomé'}</h2>
             <Link to="/search/stays" className="text-white underline font-bold drop-shadow hover:text-primary transition-colors">Voir tout</Link>
          </div>
          
@@ -398,11 +416,11 @@ const Landing: React.FC = () => {
             <Link to="/search/stays/1" className="group h-[450px] rounded-[32px] overflow-hidden relative shadow-2xl bg-black">
                <img src="https://images.unsplash.com/photo-1613490493576-2f045a168583?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80" className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700 opacity-90 group-hover:opacity-100" alt="Villa Lomé" />
                <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent flex flex-col justify-end p-8">
-                  <div className="bg-white/10 backdrop-blur-md self-start px-3 py-1 rounded-full text-xs font-bold text-white mb-3 border border-white/20">Lomé, Baguida</div>
+                  <div className="bg-white/10 backdrop-blur-md self-start px-3 py-1 rounded-full text-xs font-bold text-white mb-3 border border-white/20">{detectedLocation ? detectedLocation.city : 'Lomé, Baguida'}</div>
                   <h3 className="text-white text-2xl font-bold mb-1">Villa Prestige Océan</h3>
                   <p className="text-white/80 text-sm mb-4">Piscine privée • Vue mer • 5 Chambres</p>
                   <div className="flex items-center justify-between">
-                     <span className="text-white font-bold text-xl">250 000 FCFA <span className="text-sm font-normal">/ nuit</span></span>
+                     <span className="text-white font-bold text-xl">250 000 {detectedLocation ? detectedLocation.currency : 'FCFA'} <span className="text-sm font-normal">/ nuit</span></span>
                      <span className="bg-white text-black size-10 rounded-full flex items-center justify-center group-hover:bg-primary group-hover:text-white transition-colors">
                         <span className="material-symbols-outlined">arrow_forward</span>
                      </span>
@@ -413,11 +431,11 @@ const Landing: React.FC = () => {
             <Link to="/search/stays/2" className="group h-[450px] rounded-[32px] overflow-hidden relative shadow-2xl bg-black">
                <img src="https://images.unsplash.com/photo-1600607687939-ce8a6c25118c?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80" className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700 opacity-90 group-hover:opacity-100" alt="Maison Moderne" />
                <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent flex flex-col justify-end p-8">
-                  <div className="bg-white/10 backdrop-blur-md self-start px-3 py-1 rounded-full text-xs font-bold text-white mb-3 border border-white/20">Lomé, Cité OUA</div>
+                  <div className="bg-white/10 backdrop-blur-md self-start px-3 py-1 rounded-full text-xs font-bold text-white mb-3 border border-white/20">{detectedLocation ? detectedLocation.city : 'Lomé, Cité OUA'}</div>
                   <h3 className="text-white text-2xl font-bold mb-1">Résidence Les Palmiers</h3>
                   <p className="text-white/80 text-sm mb-4">Architecture moderne • Jardin tropical</p>
                   <div className="flex items-center justify-between">
-                     <span className="text-white font-bold text-xl">180 000 FCFA <span className="text-sm font-normal">/ nuit</span></span>
+                     <span className="text-white font-bold text-xl">180 000 {detectedLocation ? detectedLocation.currency : 'FCFA'} <span className="text-sm font-normal">/ nuit</span></span>
                      <span className="bg-white text-black size-10 rounded-full flex items-center justify-center group-hover:bg-primary group-hover:text-white transition-colors">
                         <span className="material-symbols-outlined">arrow_forward</span>
                      </span>
@@ -428,11 +446,11 @@ const Landing: React.FC = () => {
              <Link to="/search/stays/3" className="group h-[450px] rounded-[32px] overflow-hidden relative shadow-2xl bg-black">
                <img src="https://images.unsplash.com/photo-1600596542815-e32cb5313d5b?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80" className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700 opacity-90 group-hover:opacity-100" alt="Penthouse" />
                <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent flex flex-col justify-end p-8">
-                  <div className="bg-white/10 backdrop-blur-md self-start px-3 py-1 rounded-full text-xs font-bold text-white mb-3 border border-white/20">Lomé, Centre-ville</div>
+                  <div className="bg-white/10 backdrop-blur-md self-start px-3 py-1 rounded-full text-xs font-bold text-white mb-3 border border-white/20">{detectedLocation ? detectedLocation.city : 'Lomé, Centre-ville'}</div>
                   <h3 className="text-white text-2xl font-bold mb-1">Penthouse Sky View</h3>
                   <p className="text-white/80 text-sm mb-4">Toit-terrasse • Jacuzzi • Service 24/7</p>
                   <div className="flex items-center justify-between">
-                     <span className="text-white font-bold text-xl">300 000 FCFA <span className="text-sm font-normal">/ nuit</span></span>
+                     <span className="text-white font-bold text-xl">300 000 {detectedLocation ? detectedLocation.currency : 'FCFA'} <span className="text-sm font-normal">/ nuit</span></span>
                      <span className="bg-white text-black size-10 rounded-full flex items-center justify-center group-hover:bg-primary group-hover:text-white transition-colors">
                         <span className="material-symbols-outlined">arrow_forward</span>
                      </span>
@@ -466,7 +484,7 @@ const Landing: React.FC = () => {
                   </div>
                   <p className="text-gray-500 dark:text-gray-400 text-sm">Kpalimé, Togo</p>
                   <div className="flex items-baseline gap-1 mt-1">
-                     <span className="font-bold text-black dark:text-white">85 000 FCFA</span>
+                     <span className="font-bold text-black dark:text-white">85 000 {detectedLocation ? detectedLocation.currency : 'FCFA'}</span>
                      <span className="text-sm text-gray-500 dark:text-gray-400">/ nuit</span>
                   </div>
                </div>
@@ -486,7 +504,7 @@ const Landing: React.FC = () => {
                   </div>
                   <p className="text-gray-500 dark:text-gray-400 text-sm">Ouidah, Bénin</p>
                   <div className="flex items-baseline gap-1 mt-1">
-                     <span className="font-bold text-black dark:text-white">45 000 FCFA</span>
+                     <span className="font-bold text-black dark:text-white">45 000 {detectedLocation ? detectedLocation.currency : 'FCFA'}</span>
                      <span className="text-sm text-gray-500 dark:text-gray-400">/ nuit</span>
                   </div>
                </div>
@@ -506,7 +524,7 @@ const Landing: React.FC = () => {
                   </div>
                   <p className="text-gray-500 dark:text-gray-400 text-sm">Baguida, Togo</p>
                   <div className="flex items-baseline gap-1 mt-1">
-                     <span className="font-bold text-black dark:text-white">65 000 FCFA</span>
+                     <span className="font-bold text-black dark:text-white">65 000 {detectedLocation ? detectedLocation.currency : 'FCFA'}</span>
                      <span className="text-sm text-gray-500 dark:text-gray-400">/ nuit</span>
                   </div>
                </div>
@@ -529,7 +547,7 @@ const Landing: React.FC = () => {
                   </div>
                   <p className="text-gray-500 dark:text-gray-400 text-sm">Assinie, Côte d'Ivoire</p>
                   <div className="flex items-baseline gap-1 mt-1">
-                     <span className="font-bold text-black dark:text-white">95 000 FCFA</span>
+                     <span className="font-bold text-black dark:text-white">95 000 {detectedLocation ? detectedLocation.currency : 'FCFA'}</span>
                      <span className="text-sm text-gray-500 dark:text-gray-400">/ nuit</span>
                   </div>
                </div>
@@ -571,7 +589,7 @@ const Landing: React.FC = () => {
                <div className="absolute inset-0 bg-black/20 hover:bg-black/10 transition-colors p-8 flex flex-col justify-between">
                   <div>
                     <h3 className="text-white font-black text-2xl mb-2">Location de voitures</h3>
-                    <p className="text-white/90 font-medium">Berlines, 4x4 & SUVs disponibles à Lomé</p>
+                    <p className="text-white/90 font-medium">Berlines, 4x4 & SUVs disponibles à {detectedLocation ? detectedLocation.city : 'Lomé'}</p>
                   </div>
                </div>
             </Link>
@@ -589,7 +607,7 @@ const Landing: React.FC = () => {
                <div className="absolute inset-0 bg-black/20 hover:bg-black/10 transition-colors p-8 flex flex-col justify-between">
                   <div>
                     <h3 className="text-white font-black text-2xl mb-2">Attractions</h3>
-                    <p className="text-white/90 font-medium">Découvertes locales au Togo</p>
+                    <p className="text-white/90 font-medium">Découvertes locales au {detectedLocation ? detectedLocation.country : 'Togo'}</p>
                   </div>
                </div>
             </Link>

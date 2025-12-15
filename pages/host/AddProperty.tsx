@@ -1,14 +1,33 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
+import { useApp } from '../../context/AppContext';
 
 const AddProperty: React.FC = () => {
   const navigate = useNavigate();
+  const { addProperty } = useApp();
   const [step, setStep] = useState(1);
   const [category, setCategory] = useState<'stay' | 'car' | 'activity'>('stay');
+  
+  // Form State
+  const [title, setTitle] = useState('');
+  const [location, setLocation] = useState('');
+  const [price, setPrice] = useState('');
 
   const handleNext = () => setStep(step + 1);
   const handleBack = () => setStep(step - 1);
-  const handleSubmit = () => navigate('/host/properties');
+  
+  const handleSubmit = () => {
+      addProperty({
+          id: Date.now(),
+          title: title || 'Nouvelle Propriété',
+          location: location || 'Lomé, Togo',
+          type: category === 'stay' ? 'Hébergement' : category === 'car' ? 'Voiture' : 'Activité',
+          price: `${price || '0'} F`,
+          image: 'https://images.unsplash.com/photo-1512917774080-9991f1c4c750?auto=format&fit=crop&w=200&q=80', // Default image
+          status: 'En ligne'
+      });
+      navigate('/host/properties');
+  };
 
   return (
     <div className="p-8 max-w-4xl mx-auto">
@@ -63,11 +82,11 @@ const AddProperty: React.FC = () => {
                <h2 className="text-xl font-bold mb-2">Informations de base</h2>
                <div className="flex flex-col gap-2">
                   <label className="font-bold text-sm">Titre de l'annonce</label>
-                  <input type="text" placeholder="Ex: Villa Sunset avec piscine" className="w-full p-3 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-800" />
+                  <input value={title} onChange={(e) => setTitle(e.target.value)} type="text" placeholder="Ex: Villa Sunset avec piscine" className="w-full p-3 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-800" />
                </div>
                <div className="flex flex-col gap-2">
                   <label className="font-bold text-sm">Localisation</label>
-                  <input type="text" placeholder="Ex: Lomé, Togo" className="w-full p-3 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-800" />
+                  <input value={location} onChange={(e) => setLocation(e.target.value)} type="text" placeholder="Ex: Lomé, Togo" className="w-full p-3 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-800" />
                </div>
                <div className="flex flex-col gap-2">
                   <label className="font-bold text-sm">Description</label>
@@ -100,7 +119,7 @@ const AddProperty: React.FC = () => {
                <h2 className="text-xl font-bold mb-2">Tarification</h2>
                <div className="flex flex-col gap-2">
                   <label className="font-bold text-sm">Prix par nuit / jour (FCFA)</label>
-                  <input type="number" placeholder="Ex: 50000" className="w-full p-3 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-800 text-lg font-bold" />
+                  <input value={price} onChange={(e) => setPrice(e.target.value)} type="number" placeholder="Ex: 50000" className="w-full p-3 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-800 text-lg font-bold" />
                </div>
                <div className="flex flex-col gap-4 p-4 bg-gray-50 dark:bg-gray-800 rounded-xl">
                   <div className="flex justify-between items-center">

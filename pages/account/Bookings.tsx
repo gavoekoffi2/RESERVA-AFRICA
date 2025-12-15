@@ -1,8 +1,10 @@
 import React, { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
+import { useApp } from '../../context/AppContext';
 
 const Bookings: React.FC = () => {
   const location = useLocation();
+  const { user, bookings } = useApp();
   const isActive = (path: string) => location.pathname === path ? 'bg-gray-100 dark:bg-gray-800 font-semibold text-primary' : 'hover:bg-gray-50 dark:hover:bg-gray-800 text-gray-600 dark:text-gray-400';
 
   const [activeTab, setActiveTab] = useState<'upcoming' | 'completed' | 'cancelled'>('upcoming');
@@ -16,6 +18,29 @@ const Bookings: React.FC = () => {
     setReviewText('');
   };
 
+  // Filter bookings based on status (Mock logic since all mock data is 'Confirmé' or newly added)
+  // In a real app, we filter by date or status field
+  const displayedBookings = bookings.filter(b => {
+      if (activeTab === 'upcoming') return b.status === 'Confirmé' || b.status === 'En attente';
+      if (activeTab === 'completed') return false; // Mock data doesn't have past dates yet
+      if (activeTab === 'cancelled') return b.status === 'Annulé';
+      return false;
+  });
+
+  // Manually add a completed booking for demo purposes if tab is completed
+  const completedBookingDemo = activeTab === 'completed' ? [{
+      id: 'old-1',
+      title: 'Villa Prestige Océan',
+      location: 'Lomé, Togo',
+      dates: '10 Oct - 12 Oct 2023',
+      image: 'https://images.unsplash.com/photo-1613490493576-2f045a168583?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&q=80',
+      price: '250 000 XOF',
+      status: 'Terminé',
+      type: 'stay'
+  }] : [];
+
+  const listToRender = activeTab === 'completed' ? completedBookingDemo : displayedBookings;
+
   return (
     <div className="max-w-[1200px] mx-auto px-4 py-8">
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
@@ -23,9 +48,9 @@ const Bookings: React.FC = () => {
         <div className="lg:col-span-3">
           <div className="bg-white dark:bg-[#1a202c] p-4 rounded-xl shadow-sm border border-gray-100 dark:border-gray-800">
             <div className="flex gap-3 items-center pb-4 border-b border-gray-100 dark:border-gray-700">
-              <div className="bg-cover bg-center size-12 rounded-full" style={{backgroundImage: 'url("https://images.unsplash.com/photo-1531123897727-8f129e1688ce?auto=format&fit=crop&w=200&h=200")'}}></div>
+              <div className="bg-cover bg-center size-12 rounded-full" style={{backgroundImage: `url("${user?.avatar || 'https://images.unsplash.com/photo-1531123897727-8f129e1688ce?auto=format&fit=crop&w=200&h=200'}")`}}></div>
               <div>
-                <h1 className="font-bold text-gray-900 dark:text-white">Jean Dupont</h1>
+                <h1 className="font-bold text-gray-900 dark:text-white">{user?.name || 'Visiteur'}</h1>
                 <p className="text-xs text-gray-500">Voyageur</p>
               </div>
             </div>
@@ -66,52 +91,32 @@ const Bookings: React.FC = () => {
 
           <div className="flex flex-col gap-4">
             
-            {activeTab === 'upcoming' && (
-                <div className="flex flex-col sm:flex-row gap-4 bg-white dark:bg-[#1a202c] p-5 rounded-xl shadow-sm border border-gray-200 dark:border-gray-800">
-                <div className="w-full sm:w-48 h-32 bg-gray-200 rounded-lg bg-cover bg-center" style={{backgroundImage: 'url("https://images.unsplash.com/photo-1542314831-068cd1dbfeeb?auto=format&fit=crop&w=400&q=80")'}}></div>
-                <div className="flex-1 flex flex-col justify-between">
-                    <div>
-                    <h3 className="font-bold text-lg text-gray-900 dark:text-white">Sofitel Abidjan Hôtel Ivoire</h3>
-                    <p className="text-gray-500 text-sm">Abidjan, Côte d'Ivoire</p>
-                    <div className="flex items-center gap-2 mt-2">
-                        <span className="bg-gray-100 dark:bg-gray-700 dark:text-gray-300 px-2 py-1 rounded text-sm">12 Nov - 15 Nov 2023</span>
-                        <span className="bg-green-100 text-green-700 px-2 py-1 rounded text-xs font-bold">Confirmé</span>
+            {listToRender.length > 0 ? (
+                listToRender.map((booking: any) => (
+                    <div key={booking.id} className="flex flex-col sm:flex-row gap-4 bg-white dark:bg-[#1a202c] p-5 rounded-xl shadow-sm border border-gray-200 dark:border-gray-800 transition-all hover:shadow-md">
+                        <div className="w-full sm:w-48 h-32 bg-gray-200 rounded-lg bg-cover bg-center" style={{backgroundImage: `url("${booking.image}")`}}></div>
+                        <div className="flex-1 flex flex-col justify-between">
+                            <div>
+                                <h3 className="font-bold text-lg text-gray-900 dark:text-white">{booking.title}</h3>
+                                <p className="text-gray-500 text-sm">{booking.location}</p>
+                                <div className="flex items-center gap-2 mt-2">
+                                    <span className="bg-gray-100 dark:bg-gray-700 dark:text-gray-300 px-2 py-1 rounded text-sm">{booking.dates}</span>
+                                    <span className={`px-2 py-1 rounded text-xs font-bold ${booking.status === 'Confirmé' ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-700'}`}>{booking.status}</span>
+                                </div>
+                            </div>
+                            <div className="flex justify-between items-end mt-4 sm:mt-0">
+                                <p className="font-bold text-lg text-gray-900 dark:text-white">{booking.price}</p>
+                                <div className="flex gap-2">
+                                    {activeTab === 'completed' && <button onClick={openReviewModal} className="px-4 py-2 bg-black text-white dark:bg-white dark:text-black rounded-lg text-sm font-bold shadow-md hover:opacity-80 transition-colors">Laisser un avis</button>}
+                                    <button className="px-4 py-2 bg-primary text-white rounded-lg text-sm font-bold shadow-md hover:bg-[#d65a1f] transition-colors">Voir détails</button>
+                                </div>
+                            </div>
+                        </div>
                     </div>
-                    </div>
-                    <div className="flex justify-between items-end mt-4 sm:mt-0">
-                    <p className="font-bold text-lg text-gray-900 dark:text-white">450 000 XOF</p>
-                    <button className="px-4 py-2 bg-primary text-white rounded-lg text-sm font-bold shadow-md hover:bg-[#d65a1f] transition-colors">Voir détails</button>
-                    </div>
-                </div>
-                </div>
-            )}
-
-            {activeTab === 'completed' && (
-                <div className="flex flex-col sm:flex-row gap-4 bg-white dark:bg-[#1a202c] p-5 rounded-xl shadow-sm border border-gray-200 dark:border-gray-800 opacity-80 hover:opacity-100 transition-opacity">
-                <div className="w-full sm:w-48 h-32 bg-gray-200 rounded-lg bg-cover bg-center" style={{backgroundImage: 'url("https://images.unsplash.com/photo-1613490493576-2f045a168583?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&q=80")'}}></div>
-                <div className="flex-1 flex flex-col justify-between">
-                    <div>
-                    <h3 className="font-bold text-lg text-gray-900 dark:text-white">Villa Prestige Océan</h3>
-                    <p className="text-gray-500 text-sm">Lomé, Togo</p>
-                    <div className="flex items-center gap-2 mt-2">
-                        <span className="bg-gray-100 dark:bg-gray-700 dark:text-gray-300 px-2 py-1 rounded text-sm">10 Oct - 12 Oct 2023</span>
-                        <span className="bg-gray-100 text-gray-700 px-2 py-1 rounded text-xs font-bold">Terminé</span>
-                    </div>
-                    </div>
-                    <div className="flex justify-between items-end mt-4 sm:mt-0">
-                    <p className="font-bold text-lg text-gray-900 dark:text-white">250 000 XOF</p>
-                    <div className="flex gap-2">
-                        <button className="px-4 py-2 border border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-300 rounded-lg text-sm font-bold hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">Reçu</button>
-                        <button onClick={openReviewModal} className="px-4 py-2 bg-black text-white dark:bg-white dark:text-black rounded-lg text-sm font-bold shadow-md hover:opacity-80 transition-colors">Laisser un avis</button>
-                    </div>
-                    </div>
-                </div>
-                </div>
-            )}
-
-            {activeTab === 'cancelled' && (
+                ))
+            ) : (
                 <div className="p-8 text-center text-gray-500 bg-white dark:bg-[#1a202c] rounded-xl border border-gray-200 dark:border-gray-700">
-                    Vous n'avez aucune réservation annulée.
+                    Vous n'avez aucune réservation dans cette catégorie.
                 </div>
             )}
 
@@ -129,7 +134,7 @@ const Bookings: React.FC = () => {
                 </button>
                 
                 <h2 className="text-xl font-bold mb-2">Comment s'est passé votre séjour ?</h2>
-                <p className="text-gray-500 text-sm mb-6">Notez votre expérience à Villa Prestige Océan</p>
+                <p className="text-gray-500 text-sm mb-6">Notez votre expérience</p>
 
                 <div className="flex justify-center gap-2 mb-6">
                     {[1, 2, 3, 4, 5].map((star) => (
@@ -153,7 +158,6 @@ const Bookings: React.FC = () => {
 
                 <button 
                     onClick={() => {
-                        // Mock submission
                         setReviewModalOpen(false);
                         alert('Merci ! Votre avis a été envoyé.');
                     }}

@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
+import { useApp } from '../../context/AppContext';
 
 const SearchStays: React.FC = () => {
   const [searchParams] = useSearchParams();
@@ -8,19 +9,13 @@ const SearchStays: React.FC = () => {
   const checkout = searchParams.get('checkout');
   const [showMap, setShowMap] = useState(false);
   
-  // Favorites State
-  const [favorites, setFavorites] = useState<Set<number>>(new Set());
+  // Use Context for favorites
+  const { favorites, toggleFavorite } = useApp();
 
-  const toggleFavorite = (e: React.MouseEvent, id: number) => {
+  const handleToggleFavorite = (e: React.MouseEvent, id: number) => {
       e.preventDefault();
       e.stopPropagation();
-      const newFavorites = new Set(favorites);
-      if (newFavorites.has(id)) {
-          newFavorites.delete(id);
-      } else {
-          newFavorites.add(id);
-      }
-      setFavorites(newFavorites);
+      toggleFavorite(id);
   };
 
   return (
@@ -125,7 +120,7 @@ const SearchStays: React.FC = () => {
             <div className="w-full md:w-2/5 relative bg-gray-100 min-h-[240px]">
               <img className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" src="https://images.unsplash.com/photo-1566073771259-6a8506099945?auto=format&fit=crop&w=600&q=80" alt="Hotel" />
               <button 
-                onClick={(e) => toggleFavorite(e, 1)}
+                onClick={(e) => handleToggleFavorite(e, 1)}
                 className={`absolute top-3 right-3 size-8 bg-white/80 backdrop-blur rounded-full flex items-center justify-center transition-all hover:scale-110 ${favorites.has(1) ? 'text-red-500' : 'text-gray-600 hover:text-red-500'}`}
               >
                 <span className={`material-symbols-outlined text-[20px] ${favorites.has(1) ? 'icon-filled' : ''}`}>favorite</span>
@@ -169,7 +164,7 @@ const SearchStays: React.FC = () => {
             <div className="w-full md:w-2/5 relative bg-gray-100 min-h-[240px]">
               <img className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" src="https://images.unsplash.com/photo-1582719478250-c89cae4dc85b?auto=format&fit=crop&w=600&q=80" alt="Villa" />
                <button 
-                onClick={(e) => toggleFavorite(e, 2)}
+                onClick={(e) => handleToggleFavorite(e, 2)}
                 className={`absolute top-3 right-3 size-8 bg-white/80 backdrop-blur rounded-full flex items-center justify-center transition-all hover:scale-110 ${favorites.has(2) ? 'text-red-500' : 'text-gray-600 hover:text-red-500'}`}
               >
                 <span className={`material-symbols-outlined text-[20px] ${favorites.has(2) ? 'icon-filled' : ''}`}>favorite</span>
