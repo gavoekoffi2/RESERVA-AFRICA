@@ -14,8 +14,9 @@ const AirportTaxi: React.FC = () => {
     setTimeout(() => setShowRouteInfo(true), 500);
   };
 
-  const handleBook = () => {
-      navigate('/booking/details');
+  // IDs 10 and 11 correspond to the new Taxi Mocks in AppContext
+  const handleBook = (taxiId: number) => {
+      navigate(`/booking/details?type=car&id=${taxiId}&checkin=${new Date().toISOString()}&checkout=${new Date().toISOString()}`);
   };
 
   return (
@@ -98,7 +99,8 @@ const AirportTaxi: React.FC = () => {
           {/* List */}
           <div className="flex-1 space-y-6">
              <h2 className="text-xl font-bold text-gray-900 dark:text-white">Véhicules disponibles</h2>
-             {/* Taxi Option 1 */}
+             
+             {/* Taxi Option 1: Standard (ID 10) */}
               <div className="bg-white dark:bg-[#1a202c] rounded-2xl border border-gray-200 dark:border-gray-700 p-6 flex items-center gap-6 shadow-sm hover:shadow-lg transition-all cursor-pointer group" onClick={() => setShowRouteInfo(true)}>
                   <div className="w-28 relative bg-gray-100 dark:bg-gray-800 rounded-lg">
                       <img src="https://images.unsplash.com/photo-1549317661-bd32c8ce0db2?auto=format&fit=crop&w=300&q=80" alt="Standard" className="w-full h-20 object-contain rounded-lg group-hover:scale-110 transition-transform" />
@@ -113,11 +115,11 @@ const AirportTaxi: React.FC = () => {
                   </div>
                   <div className="text-right">
                       <p className="text-2xl font-black text-primary">25 000 F</p>
-                      <button onClick={(e) => {e.stopPropagation(); handleBook();}} className="mt-2 bg-black text-white dark:bg-white dark:text-black px-4 py-2 rounded-lg font-bold text-xs hover:opacity-80">Réserver</button>
+                      <button onClick={(e) => {e.stopPropagation(); handleBook(10);}} className="mt-2 bg-black text-white dark:bg-white dark:text-black px-4 py-2 rounded-lg font-bold text-xs hover:opacity-80">Réserver</button>
                   </div>
               </div>
 
-              {/* Taxi Option 2 */}
+              {/* Taxi Option 2: Minivan (ID 11) */}
               <div className="bg-white dark:bg-[#1a202c] rounded-2xl border border-gray-200 dark:border-gray-700 p-6 flex items-center gap-6 shadow-sm hover:shadow-lg transition-all cursor-pointer group" onClick={() => setShowRouteInfo(true)}>
                   <div className="w-28 relative bg-gray-100 dark:bg-gray-800 rounded-lg">
                       <img src="https://images.unsplash.com/photo-1550355291-bbee04a92027?auto=format&fit=crop&w=300&q=80" alt="Van" className="w-full h-20 object-contain rounded-lg group-hover:scale-110 transition-transform" />
@@ -132,7 +134,7 @@ const AirportTaxi: React.FC = () => {
                   </div>
                   <div className="text-right">
                       <p className="text-2xl font-black text-primary">40 000 F</p>
-                      <button onClick={(e) => {e.stopPropagation(); handleBook();}} className="mt-2 bg-black text-white dark:bg-white dark:text-black px-4 py-2 rounded-lg font-bold text-xs hover:opacity-80">Réserver</button>
+                      <button onClick={(e) => {e.stopPropagation(); handleBook(11);}} className="mt-2 bg-black text-white dark:bg-white dark:text-black px-4 py-2 rounded-lg font-bold text-xs hover:opacity-80">Réserver</button>
                   </div>
               </div>
           </div>

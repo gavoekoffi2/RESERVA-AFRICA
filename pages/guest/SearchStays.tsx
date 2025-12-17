@@ -1,16 +1,22 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import { useApp } from '../../context/AppContext';
 
 const SearchStays: React.FC = () => {
   const [searchParams] = useSearchParams();
-  const destination = searchParams.get('dest') || 'Lomé';
+  const destination = searchParams.get('dest') || '';
   const checkin = searchParams.get('checkin');
   const checkout = searchParams.get('checkout');
+  const adults = parseInt(searchParams.get('adults') || '1');
+  const childrenCount = parseInt(searchParams.get('children') || '0');
+  const totalGuests = adults + childrenCount;
+
   const [showMap, setShowMap] = useState(false);
-  
-  // Use Context for favorites
-  const { favorites, toggleFavorite } = useApp();
+  const { allProperties, favorites, toggleFavorite, checkAvailability } = useApp();
+
+  const [selectedTypes, setSelectedTypes] = useState<string[]>([]);
+  const [selectedAmenities, setSelectedAmenities] = useState<string[]>([]);
+  const [priceRange, setPriceRange] = useState<number>(500000);
 
   const handleToggleFavorite = (e: React.MouseEvent, id: number) => {
       e.preventDefault();
@@ -18,206 +24,181 @@ const SearchStays: React.FC = () => {
       toggleFavorite(id);
   };
 
+  const filteredProperties = useMemo(() => {
+      let start: Date | null = null;
+      let end: Date | null = null;
+      if (checkin && checkout) {
+          start = new Date(checkin);
+          end = new Date(checkout);
+      }
+      const destLower = destination.toLowerCase().split(',')[0].trim();
+
+      return allProperties.filter(p => {
+          if (p.type !== 'Hébergement') return false;
+          if (p.status !== 'En ligne') return false;
+          if (destLower && !p.location.toLowerCase().includes(destLower)) return false;
+          if (totalGuests > 0 && p.capacity && p.capacity < totalGuests) return false;
+          if (start && end && !checkAvailability(p.id, start, end)) return false;
+          if (selectedTypes.length > 0 && p.category && !selectedTypes.includes(p.category)) return false;
+          if (selectedAmenities.length > 0) {
+              const hasAllAmenities = selectedAmenities.every(a => p.features?.includes(a));
+              if (!hasAllAmenities) return false;
+          }
+          if (p.rawPrice && p.rawPrice > priceRange) return false;
+          return true;
+      });
+  }, [allProperties, selectedTypes, selectedAmenities, priceRange, destination, checkin, checkout, totalGuests, checkAvailability]);
+
   return (
-    <div className="max-w-[1440px] w-full mx-auto px-4 md:px-6 py-6">
-      <div className="flex flex-col gap-2 mb-6">
-        <h1 className="text-3xl font-bold">
-          Hébergements à <span className="text-primary">{destination}</span>
+    <div className="max-w-[1440px] w-full mx-auto px-4 md:px-10 py-10 animate-reveal">
+      <div className="flex flex-col gap-2 mb-10">
+        <h1 className="text-4xl font-black tracking-tight">
+          SÉJOURS {destination ? `À ${destination.toUpperCase()}` : 'EN AFRIQUE'}
         </h1>
-        <p className="text-gray-500 font-medium">
-          {checkin && checkout ? `Du ${checkin} au ${checkout} · ` : ''} 
-          240+ séjours trouvés
+        <p className="text-gray-500 font-bold uppercase text-xs tracking-widest">
+          {checkin && checkout ? `Du ${new Date(checkin).toLocaleDateString()} au ${new Date(checkout).toLocaleDateString()} • ` : ''} 
+          {filteredProperties.length} RÉSULTATS {totalGuests > 0 ? `POUR ${totalGuests} PERS.` : ''}
         </p>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
-        {/* Filters Sidebar */}
-        <aside className="lg:col-span-1 space-y-6 hidden lg:block h-fit sticky top-24">
+      <div className="grid grid-cols-1 lg:grid-cols-4 gap-12">
+        <aside className="lg:col-span-1 space-y-10 hidden lg:block h-fit sticky top-24">
           <div className="flex items-center justify-between">
-            <h2 className="text-lg font-bold">Filtres</h2>
-            <button className="text-sm text-primary font-medium hover:underline">Réinitialiser</button>
+            <h2 className="text-xl font-black uppercase tracking-tighter">Filtres</h2>
+            <button 
+                onClick={() => { setSelectedTypes([]); setSelectedAmenities([]); setPriceRange(500000); }}
+                className="text-xs font-black text-primary uppercase tracking-widest hover:underline"
+            >
+                Effacer
+            </button>
           </div>
           
-          <div className="bg-white dark:bg-[#1e293b] p-4 rounded-xl border border-gray-200 dark:border-gray-700">
-             <div className="flex items-center gap-3 mb-4">
-               <span className="material-symbols-outlined text-primary">map</span>
-               <span className="font-bold">Afficher la carte</span>
+          <div className="bg-white dark:bg-[#1e293b] p-6 rounded-[32px] border border-gray-100 dark:border-gray-800 shadow-xl shadow-gray-200/40 dark:shadow-none transition-all-custom group">
+             <div className="flex items-center gap-4 mb-6">
+               <div className="p-2.5 bg-primary/10 text-primary rounded-2xl group-hover:scale-110 transition-transform">
+                  <span className="material-symbols-outlined font-bold">map</span>
+               </div>
+               <span className="font-black text-sm uppercase tracking-wider">Carte Interactive</span>
                <div 
                  onClick={() => setShowMap(!showMap)}
-                 className={`ml-auto w-12 h-6 rounded-full p-1 cursor-pointer transition-colors ${showMap ? 'bg-primary' : 'bg-gray-300'}`}
+                 className={`ml-auto w-12 h-6 rounded-full p-1 cursor-pointer transition-all-custom ${showMap ? 'bg-primary' : 'bg-gray-200 dark:bg-gray-700'}`}
                >
                  <div className={`bg-white w-4 h-4 rounded-full shadow-sm transition-transform ${showMap ? 'translate-x-6' : 'translate-x-0'}`}></div>
                </div>
              </div>
              {showMap && (
-               <div className="h-40 bg-gray-200 rounded-lg overflow-hidden relative">
+               <div className="h-48 bg-gray-100 dark:bg-gray-800 rounded-2xl overflow-hidden relative border border-gray-200 dark:border-gray-700 animate-reveal">
                   <iframe 
-                    width="100%" 
-                    height="100%" 
-                    frameBorder="0" 
-                    scrolling="no" 
-                    marginHeight={0} 
-                    marginWidth={0} 
-                    src={`https://maps.google.com/maps?q=${destination}&t=&z=13&ie=UTF8&iwloc=&output=embed`}
-                    className="opacity-80"
+                    width="100%" height="100%" frameBorder="0" scrolling="no" marginHeight={0} marginWidth={0} 
+                    src={`https://maps.google.com/maps?q=${destination || 'Afrique'}&t=&z=13&ie=UTF8&iwloc=&output=embed`}
+                    className="opacity-90 grayscale-[0.3] dark:invert dark:grayscale"
+                    title="Search results map"
                   ></iframe>
-                  <button className="absolute inset-0 flex items-center justify-center bg-black/10 font-bold text-white hover:bg-black/20">
-                     Agrandir
-                  </button>
                </div>
              )}
           </div>
           
-          {/* Price Range */}
-          <div className="space-y-4">
-            <h3 className="text-sm font-bold uppercase tracking-wider text-text-main dark:text-gray-300">Budget par nuit</h3>
-            <div className="relative pt-6 pb-2">
-              <div className="flex h-1 w-full rounded-sm bg-[#e7d5cf] dark:bg-gray-600 relative">
-                <div className="absolute left-0 right-[20%] top-0 bottom-0 rounded-sm bg-primary"></div>
-                <div className="absolute left-[80%] top-1/2 -translate-y-1/2 -translate-x-1/2 size-4 rounded-full bg-white border-2 border-primary shadow-md"></div>
-              </div>
-              <div className="flex justify-between text-xs font-bold mt-2">
-                <span>0 CFA</span>
-                <span>500k+ CFA</span>
+          <div className="space-y-6">
+            <h3 className="text-xs font-black uppercase tracking-[0.2em] text-gray-400">Budget max / nuit</h3>
+            <div className="relative px-2">
+              <input 
+                type="range" min="0" max="500000" step="10000" value={priceRange}
+                onChange={(e) => setPriceRange(Number(e.target.value))}
+                className="w-full h-1.5 bg-gray-200 dark:bg-gray-700 rounded-lg appearance-none cursor-pointer accent-primary"
+              />
+              <div className="flex justify-between text-xs font-black mt-4 text-gray-500">
+                <span>0 F</span>
+                <span className="text-primary">{priceRange.toLocaleString()} F</span>
               </div>
             </div>
           </div>
 
-          <hr className="border-[#e7d5cf] dark:border-gray-700"/>
-
-          {/* Type */}
-          <div className="space-y-3">
-            <h3 className="text-sm font-bold uppercase tracking-wider text-text-main dark:text-gray-300">Type de logement</h3>
-            <div className="space-y-2">
-              {['Hôtel', 'Appartement', 'Villa', 'Maison d\'hôtes', 'Resort'].map((cat, idx) => (
-                <label key={idx} className="flex items-center gap-3 cursor-pointer group">
-                  <input type="checkbox" className="h-5 w-5 rounded border-[#e7d5cf] text-primary focus:ring-primary/20 bg-transparent checked:bg-primary transition-colors" />
-                  <span className="text-text-main dark:text-gray-400 group-hover:text-primary transition-colors">{cat}</span>
+          <div className="space-y-6">
+            <h3 className="text-xs font-black uppercase tracking-[0.2em] text-gray-400">Type de logement</h3>
+            <div className="grid grid-cols-1 gap-3">
+              {['Villa', 'Appartement', 'Maison', 'Hôtel'].map((cat) => (
+                <label key={cat} className="flex items-center gap-4 cursor-pointer group p-2 hover:bg-gray-50 dark:hover:bg-gray-800 rounded-xl transition-all-custom">
+                  <div className={`size-5 rounded border-2 flex items-center justify-center transition-all ${selectedTypes.includes(cat) ? 'bg-primary border-primary' : 'border-gray-300 dark:border-gray-600'}`}>
+                     {selectedTypes.includes(cat) && <span className="material-symbols-outlined text-white text-xs font-black">check</span>}
+                  </div>
+                  <input type="checkbox" checked={selectedTypes.includes(cat)} onChange={() => setSelectedTypes(prev => prev.includes(cat) ? prev.filter(t => t !== cat) : [...prev, cat])} className="hidden" />
+                  <span className="text-sm font-bold text-gray-700 dark:text-gray-300 group-hover:text-black dark:group-hover:text-white">{cat}</span>
                 </label>
               ))}
             </div>
           </div>
         </aside>
 
-        {/* Results */}
-        <div className={`lg:col-span-3 flex flex-col gap-6 ${showMap ? 'lg:col-span-2' : ''}`}>
-          <div className="flex flex-col sm:flex-row justify-between items-center gap-4 bg-white dark:bg-[#2d1e18] p-4 rounded-xl border border-[#e7d5cf] shadow-sm">
-            <div className="text-text-main dark:text-white font-medium">
-              <span className="font-bold text-primary">156</span> hébergements trouvés
-            </div>
-            <div className="relative flex items-center gap-2">
-              <span className="text-sm text-[#9a5f4c] hidden sm:inline">Trier par:</span>
-              <select className="bg-background-light dark:bg-gray-800 border-[#e7d5cf] dark:border-gray-700 rounded-lg text-sm font-bold text-text-main dark:text-white py-2 pl-3 pr-8">
-                <option>Recommandé</option>
-                <option>Prix: Croissant</option>
-                <option>Note: Décroissant</option>
-              </select>
-            </div>
-          </div>
-
-          {/* Hotel Card 1 */}
-          <Link to="/search/stays/1" className="group bg-white dark:bg-[#2d1e18] rounded-2xl border border-[#e7d5cf] overflow-hidden hover:shadow-md transition-all flex flex-col md:flex-row cursor-pointer">
-            <div className="w-full md:w-2/5 relative bg-gray-100 min-h-[240px]">
-              <img className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" src="https://images.unsplash.com/photo-1566073771259-6a8506099945?auto=format&fit=crop&w=600&q=80" alt="Hotel" />
-              <button 
-                onClick={(e) => handleToggleFavorite(e, 1)}
-                className={`absolute top-3 right-3 size-8 bg-white/80 backdrop-blur rounded-full flex items-center justify-center transition-all hover:scale-110 ${favorites.has(1) ? 'text-red-500' : 'text-gray-600 hover:text-red-500'}`}
-              >
-                <span className={`material-symbols-outlined text-[20px] ${favorites.has(1) ? 'icon-filled' : ''}`}>favorite</span>
-              </button>
-            </div>
-            <div className="flex-1 p-5 flex flex-col justify-between">
-              <div>
-                <div className="flex justify-between items-start mb-2">
-                  <div>
-                     <span className="text-xs font-bold text-gray-500 uppercase tracking-wide">Hôtel • 5 Étoiles</span>
-                     <h3 className="text-xl font-bold text-text-main dark:text-white mt-1">Hôtel 2 Février, Lomé</h3>
+        <div className={`lg:col-span-3 flex flex-col gap-8 ${showMap ? 'lg:col-span-2' : ''}`}>
+          {filteredProperties.length === 0 ? (
+              <div className="flex flex-col items-center justify-center py-32 bg-gray-50 dark:bg-gray-800/20 rounded-[40px] border-2 border-dashed border-gray-200 dark:border-gray-700 text-center px-10 animate-reveal">
+                  <div className="size-20 bg-gray-100 dark:bg-gray-800 rounded-full flex items-center justify-center mb-6 text-gray-300">
+                     <span className="material-symbols-outlined text-4xl">travel_explore</span>
                   </div>
-                  <div className="flex items-center gap-1 bg-primary text-white px-2 py-1 rounded-lg">
-                    <span className="font-bold text-sm">9.5</span>
-                  </div>
-                </div>
-                <p className="text-sm text-gray-500 mb-4 line-clamp-2">Le plus haut bâtiment du Togo offrant une vue panoramique sur Lomé, une piscine de luxe et un service 5 étoiles.</p>
-                <div className="flex flex-wrap gap-2 mb-4">
-                  <span className="text-xs bg-gray-100 dark:bg-gray-700 px-2 py-1 rounded font-medium">Piscine</span>
-                  <span className="text-xs bg-gray-100 dark:bg-gray-700 px-2 py-1 rounded font-medium">Vue Panoramique</span>
-                  <span className="text-xs bg-gray-100 dark:bg-gray-700 px-2 py-1 rounded font-medium">Spa</span>
-                </div>
+                  <p className="font-black text-2xl text-gray-500 dark:text-gray-400">Aucun résultat trouvé</p>
+                  <p className="text-sm text-gray-400 mt-2 font-medium max-w-sm">Essayez d'élargir vos critères de recherche ou vos dates de voyage.</p>
+                  <button onClick={() => { setSelectedTypes([]); setPriceRange(500000); }} className="mt-8 bg-black text-white dark:bg-white dark:text-black px-8 py-3 rounded-full font-black text-sm uppercase tracking-widest btn-active-scale">Réinitialiser les filtres</button>
               </div>
-              <div className="flex items-end justify-between border-t border-[#e7d5cf] dark:border-gray-700 pt-4 mt-auto">
-                <div className="flex flex-col">
-                  <span className="text-xs text-green-600 font-bold mb-1">Annulation gratuite</span>
-                  <div className="flex items-baseline gap-1">
-                    <span className="text-2xl font-black text-primary">145 000</span>
-                    <span className="text-sm font-medium text-text-main dark:text-gray-300">FCFA / nuit</span>
-                  </div>
-                </div>
-                <button className="bg-primary hover:bg-[#d65a1f] text-white px-6 py-3 rounded-xl font-bold shadow-lg shadow-primary/20 transition-all">
-                  Voir dispo
-                </button>
+          ) : (
+              <div className="space-y-8">
+                  {filteredProperties.map((property, idx) => (
+                    <Link 
+                        to={`/search/stays/${property.id}`} 
+                        key={property.id}
+                        style={{ animationDelay: `${idx * 0.05}s` }}
+                        className="group bg-white dark:bg-[#2d1e18] rounded-[40px] border border-gray-100 dark:border-gray-800 overflow-hidden hover:shadow-2xl transition-all-custom flex flex-col md:flex-row cursor-pointer animate-reveal hover-lift"
+                    >
+                        <div className="w-full md:w-[400px] relative bg-gray-100 overflow-hidden shrink-0">
+                            <img className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-[1.5s]" src={property.image} alt={property.title} />
+                            <button 
+                                onClick={(e) => handleToggleFavorite(e, property.id)}
+                                className={`absolute top-6 right-6 size-12 backdrop-blur-xl rounded-full flex items-center justify-center transition-all-custom hover:scale-125 z-10 border border-white/20 ${favorites.has(property.id) ? 'bg-white text-red-500 shadow-lg' : 'bg-black/20 text-white hover:bg-white hover:text-red-500'}`}
+                            >
+                                <span className={`material-symbols-outlined ${favorites.has(property.id) ? 'icon-filled' : ''}`}>favorite</span>
+                            </button>
+                        </div>
+                        <div className="flex-1 p-8 flex flex-col justify-between overflow-hidden">
+                            <div>
+                                <div className="flex justify-between items-start mb-4">
+                                    <div className="overflow-hidden">
+                                        <span className="text-[10px] font-black text-primary uppercase tracking-[0.25em] mb-2 block">{property.category} • {property.location}</span>
+                                        <h3 className="text-3xl font-black text-gray-900 dark:text-white leading-tight tracking-tighter truncate">{property.title}</h3>
+                                    </div>
+                                    <div className="bg-gray-50 dark:bg-white/10 px-4 py-1.5 rounded-2xl flex items-center gap-1.5 border border-gray-100 dark:border-white/5 shrink-0">
+                                        <span className="material-symbols-outlined text-sm text-yellow-500 icon-filled">star</span>
+                                        <span className="font-black text-sm">{property.rating || 'New'}</span>
+                                    </div>
+                                </div>
+                                <p className="text-sm text-gray-500 dark:text-gray-400 font-medium mb-6 line-clamp-2 leading-relaxed">{property.description || "Un lieu d'exception sélectionné par nos experts pour sa qualité et son authenticité."}</p>
+                                <div className="flex flex-wrap gap-3 mb-8">
+                                    <div className="flex items-center gap-2 bg-gray-50 dark:bg-white/5 px-4 py-2 rounded-xl text-xs font-bold text-gray-600 dark:text-gray-400 border border-gray-100 dark:border-white/5">
+                                       <span className="material-symbols-outlined text-sm">group</span> {property.capacity} pers.
+                                    </div>
+                                    {property.features?.slice(0, 3).map((feat) => (
+                                        <div key={feat} className="flex items-center gap-2 bg-gray-50 dark:bg-white/5 px-4 py-2 rounded-xl text-xs font-bold text-gray-600 dark:text-gray-400 border border-gray-100 dark:border-white/5">
+                                            <span className="material-symbols-outlined text-sm">verified</span> {feat}
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+                            <div className="flex items-end justify-between pt-6 border-t border-gray-100 dark:border-gray-800">
+                                <div>
+                                    <span className="text-[10px] font-black uppercase tracking-widest text-green-600 bg-green-50 dark:bg-green-900/20 px-3 py-1 rounded-full mb-3 inline-block">Annulation gratuite</span>
+                                    <div className="flex items-baseline gap-2">
+                                        <span className="text-4xl font-black text-gray-900 dark:text-white tracking-tighter">{property.price}</span>
+                                        <span className="text-xs font-black text-gray-400 uppercase tracking-widest">/ nuit</span>
+                                    </div>
+                                </div>
+                                <button className="bg-primary hover:bg-primary-dark text-white px-10 py-4 rounded-full font-black uppercase tracking-widest shadow-2xl shadow-primary/20 transition-all-custom btn-active-scale group">
+                                    Voir dispo <span className="material-symbols-outlined ml-2 group-hover:translate-x-1 transition-transform">arrow_forward</span>
+                                </button>
+                            </div>
+                        </div>
+                    </Link>
+                  ))}
               </div>
-            </div>
-          </Link>
-
-          {/* Hotel Card 2 */}
-          <Link to="/search/stays/2" className="group bg-white dark:bg-[#2d1e18] rounded-2xl border border-[#e7d5cf] overflow-hidden hover:shadow-md transition-all flex flex-col md:flex-row cursor-pointer">
-            <div className="w-full md:w-2/5 relative bg-gray-100 min-h-[240px]">
-              <img className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" src="https://images.unsplash.com/photo-1582719478250-c89cae4dc85b?auto=format&fit=crop&w=600&q=80" alt="Villa" />
-               <button 
-                onClick={(e) => handleToggleFavorite(e, 2)}
-                className={`absolute top-3 right-3 size-8 bg-white/80 backdrop-blur rounded-full flex items-center justify-center transition-all hover:scale-110 ${favorites.has(2) ? 'text-red-500' : 'text-gray-600 hover:text-red-500'}`}
-              >
-                <span className={`material-symbols-outlined text-[20px] ${favorites.has(2) ? 'icon-filled' : ''}`}>favorite</span>
-              </button>
-            </div>
-            <div className="flex-1 p-5 flex flex-col justify-between">
-              <div>
-                <div className="flex justify-between items-start mb-2">
-                  <div>
-                     <span className="text-xs font-bold text-gray-500 uppercase tracking-wide">Villa • Assinie</span>
-                     <h3 className="text-xl font-bold text-text-main dark:text-white mt-1">Villa Cocotier</h3>
-                  </div>
-                  <div className="flex items-center gap-1 bg-primary text-white px-2 py-1 rounded-lg">
-                    <span className="font-bold text-sm">8.8</span>
-                  </div>
-                </div>
-                <p className="text-sm text-gray-500 mb-4 line-clamp-2">Magnifique villa avec piscine privée au bord de la lagune. Idéale pour les familles.</p>
-                <div className="flex flex-wrap gap-2 mb-4">
-                  <span className="text-xs bg-gray-100 dark:bg-gray-700 px-2 py-1 rounded font-medium">Bord de mer</span>
-                  <span className="text-xs bg-gray-100 dark:bg-gray-700 px-2 py-1 rounded font-medium">4 Chambres</span>
-                  <span className="text-xs bg-gray-100 dark:bg-gray-700 px-2 py-1 rounded font-medium">Wifi</span>
-                </div>
-              </div>
-              <div className="flex items-end justify-between border-t border-[#e7d5cf] dark:border-gray-700 pt-4 mt-auto">
-                <div className="flex flex-col">
-                  <div className="flex items-baseline gap-1">
-                    <span className="text-2xl font-black text-primary">120 000</span>
-                    <span className="text-sm font-medium text-text-main dark:text-gray-300">FCFA / nuit</span>
-                  </div>
-                </div>
-                <button className="bg-primary hover:bg-[#d65a1f] text-white px-6 py-3 rounded-xl font-bold shadow-lg shadow-primary/20 transition-all">
-                  Voir dispo
-                </button>
-              </div>
-            </div>
-          </Link>
+          )}
         </div>
-        
-        {/* Large Map View */}
-        {showMap && (
-           <div className="lg:col-span-1 hidden lg:block sticky top-24 h-[calc(100vh-120px)] rounded-xl overflow-hidden shadow-lg border border-gray-200">
-               <iframe 
-                width="100%" 
-                height="100%" 
-                frameBorder="0" 
-                scrolling="no" 
-                marginHeight={0} 
-                marginWidth={0} 
-                src={`https://maps.google.com/maps?q=${destination}&t=&z=12&ie=UTF8&iwloc=&output=embed`}
-                className="w-full h-full"
-              ></iframe>
-           </div>
-        )}
       </div>
     </div>
   );

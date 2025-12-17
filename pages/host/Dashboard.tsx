@@ -1,7 +1,25 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
+import { useApp } from '../../context/AppContext';
 
 const Dashboard: React.FC = () => {
+  const { bookings, properties, user } = useApp();
+
+  // Filter Data for the Current Host
+  const myProperties = properties.filter(p => p.owner === user?.name);
+  const myBookings = bookings.filter(b => b.hostName === user?.name);
+
+  // Calculate dynamic stats
+  const totalRevenue = myBookings.reduce((acc, curr) => acc + (curr.totalAmount || 0), 0);
+  const revenueString = totalRevenue > 1000000 ? `${(totalRevenue / 1000000).toFixed(1)}M` : `${(totalRevenue / 1000).toFixed(0)}k`;
+  
+  const reviewsCount = myProperties.reduce((acc, p) => acc + (p.reviews || 0), 0);
+  const avgRating = myProperties.length > 0 
+    ? (myProperties.reduce((acc, p) => acc + (p.rating || 0), 0) / myProperties.length).toFixed(1) 
+    : '0';
+
+  const upcomingBookings = myBookings.filter(b => b.status === 'Confirmé' || b.status === 'En attente');
+
   return (
     <div className="p-4 md:p-8 max-w-[1600px] mx-auto min-h-screen bg-[#f7f9fc] dark:bg-[#0f1115]">
       
@@ -22,7 +40,7 @@ const Dashboard: React.FC = () => {
       {/* Header */}
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4 animate-fade-in-down">
         <div>
-          <h1 className="text-3xl md:text-4xl font-black text-gray-900 dark:text-white tracking-tight">Bonjour, Kodjo 👋</h1>
+          <h1 className="text-3xl md:text-4xl font-black text-gray-900 dark:text-white tracking-tight">Bonjour, {user?.name.split(' ')[0]} 👋</h1>
           <p className="text-gray-500 dark:text-gray-400 font-medium">Voici ce qui se passe sur vos propriétés aujourd'hui.</p>
         </div>
         <div className="flex gap-3">
@@ -43,10 +61,10 @@ const Dashboard: React.FC = () => {
               <div className="p-2 bg-primary/10 rounded-xl text-primary">
                  <span className="material-symbols-outlined text-xl">payments</span>
               </div>
-              <span className="text-sm font-bold text-gray-500 dark:text-gray-400">Revenus (Oct)</span>
+              <span className="text-sm font-bold text-gray-500 dark:text-gray-400">Revenus (Total)</span>
            </div>
            <div className="flex items-end gap-3">
-              <h2 className="text-3xl font-black text-gray-900 dark:text-white">2.4M <span className="text-lg">F</span></h2>
+              <h2 className="text-3xl font-black text-gray-900 dark:text-white">{revenueString} <span className="text-lg">F</span></h2>
               <span className="text-xs font-bold text-green-500 bg-green-100 dark:bg-green-900/30 px-2 py-1 rounded-lg mb-1 flex items-center">
                  <span className="material-symbols-outlined text-xs mr-0.5">trending_up</span> +12%
               </span>
@@ -62,10 +80,10 @@ const Dashboard: React.FC = () => {
               <div className="p-2 bg-blue-500/10 rounded-xl text-blue-500">
                  <span className="material-symbols-outlined text-xl">door_front</span>
               </div>
-              <span className="text-sm font-bold text-gray-500 dark:text-gray-400">Taux d'occupation</span>
+              <span className="text-sm font-bold text-gray-500 dark:text-gray-400">Réservations</span>
            </div>
            <div className="flex items-end gap-3">
-              <h2 className="text-3xl font-black text-gray-900 dark:text-white">78%</h2>
+              <h2 className="text-3xl font-black text-gray-900 dark:text-white">{upcomingBookings.length}</h2>
               <span className="text-xs font-bold text-green-500 bg-green-100 dark:bg-green-900/30 px-2 py-1 rounded-lg mb-1 flex items-center">
                  <span className="material-symbols-outlined text-xs mr-0.5">trending_up</span> +5%
               </span>
@@ -84,9 +102,9 @@ const Dashboard: React.FC = () => {
               <span className="text-sm font-bold text-gray-500 dark:text-gray-400">Note moyenne</span>
            </div>
            <div className="flex items-end gap-3">
-              <h2 className="text-3xl font-black text-gray-900 dark:text-white">4.92</h2>
+              <h2 className="text-3xl font-black text-gray-900 dark:text-white">{avgRating}</h2>
               <span className="text-xs font-bold text-gray-500 bg-gray-100 dark:bg-gray-800 px-2 py-1 rounded-lg mb-1">
-                 145 avis
+                 {reviewsCount} avis
               </span>
            </div>
         </div>
@@ -100,12 +118,12 @@ const Dashboard: React.FC = () => {
               <div className="p-2 bg-purple-500/10 rounded-xl text-purple-500">
                  <span className="material-symbols-outlined text-xl">visibility</span>
               </div>
-              <span className="text-sm font-bold text-gray-500 dark:text-gray-400">Vues (30j)</span>
+              <span className="text-sm font-bold text-gray-500 dark:text-gray-400">Propriétés</span>
            </div>
            <div className="flex items-end gap-3">
-              <h2 className="text-3xl font-black text-gray-900 dark:text-white">1.2k</h2>
+              <h2 className="text-3xl font-black text-gray-900 dark:text-white">{myProperties.length}</h2>
               <span className="text-xs font-bold text-green-500 bg-green-100 dark:bg-green-900/30 px-2 py-1 rounded-lg mb-1 flex items-center">
-                 <span className="material-symbols-outlined text-xs mr-0.5">trending_up</span> +18%
+                 <span className="material-symbols-outlined text-xs mr-0.5">add</span> New
               </span>
            </div>
         </div>
@@ -158,34 +176,24 @@ const Dashboard: React.FC = () => {
             <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-6">Arrivées imminentes</h3>
             
             <div className="flex-1 space-y-4">
-               {/* Guest 1 */}
-               <div className="flex items-center gap-4 p-4 rounded-2xl bg-gray-50 dark:bg-gray-800 border border-gray-100 dark:border-gray-700 hover:border-primary/30 transition-all cursor-pointer">
-                  <div className="relative">
-                     <div className="size-12 rounded-full bg-cover bg-center" style={{backgroundImage: 'url("https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&w=100&q=80")'}}></div>
-                     <div className="absolute -bottom-1 -right-1 bg-green-500 border-2 border-white dark:border-gray-800 size-4 rounded-full"></div>
-                  </div>
-                  <div className="flex-1">
-                     <h4 className="font-bold text-gray-900 dark:text-white">Jean-Pierre K.</h4>
-                     <p className="text-xs text-gray-500">Villa Sunset • Aujourd'hui</p>
-                  </div>
-                  <button className="size-10 rounded-full bg-white dark:bg-gray-700 shadow-sm flex items-center justify-center text-primary hover:bg-primary hover:text-white transition-colors">
-                     <span className="material-symbols-outlined text-lg">chat</span>
-                  </button>
-               </div>
-
-               {/* Guest 2 */}
-               <div className="flex items-center gap-4 p-4 rounded-2xl bg-white dark:bg-[#1e293b] border border-gray-100 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800 transition-all cursor-pointer">
-                  <div className="relative">
-                     <div className="size-12 rounded-full bg-cover bg-center" style={{backgroundImage: 'url("https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=100&q=80")'}}></div>
-                  </div>
-                  <div className="flex-1">
-                     <h4 className="font-bold text-gray-900 dark:text-white">Sarah M.</h4>
-                     <p className="text-xs text-gray-500">Loft Abidjan • Demain</p>
-                  </div>
-                  <button className="size-10 rounded-full bg-gray-100 dark:bg-gray-800 shadow-sm flex items-center justify-center text-gray-500 hover:bg-black hover:text-white transition-colors">
-                     <span className="material-symbols-outlined text-lg">visibility</span>
-                  </button>
-               </div>
+               {upcomingBookings.slice(0, 3).map((booking, idx) => (
+                   <div key={idx} className="flex items-center gap-4 p-4 rounded-2xl bg-gray-50 dark:bg-gray-800 border border-gray-100 dark:border-gray-700 hover:border-primary/30 transition-all cursor-pointer">
+                      <div className="relative">
+                         <div className="size-12 rounded-full bg-cover bg-center" style={{backgroundImage: `url("${booking.guestAvatar}")`}}></div>
+                         <div className="absolute -bottom-1 -right-1 bg-green-500 border-2 border-white dark:border-gray-800 size-4 rounded-full"></div>
+                      </div>
+                      <div className="flex-1 overflow-hidden">
+                         <h4 className="font-bold text-gray-900 dark:text-white truncate">{booking.guestName}</h4>
+                         <p className="text-xs text-gray-500 truncate">{booking.title}</p>
+                      </div>
+                      <Link to={`/host/reservation/${booking.id}`} className="size-10 rounded-full bg-white dark:bg-gray-700 shadow-sm flex items-center justify-center text-primary hover:bg-primary hover:text-white transition-colors">
+                         <span className="material-symbols-outlined text-lg">visibility</span>
+                      </Link>
+                   </div>
+               ))}
+               {upcomingBookings.length === 0 && (
+                   <div className="text-center text-gray-500 text-sm">Aucune arrivée prévue.</div>
+               )}
             </div>
 
             <Link to="/host/calendar" className="mt-6 w-full py-3 rounded-xl border-2 border-gray-100 dark:border-gray-700 font-bold text-center text-gray-600 dark:text-gray-300 hover:border-black dark:hover:border-white hover:text-black dark:hover:text-white transition-all">
@@ -213,54 +221,31 @@ const Dashboard: React.FC = () => {
                   </tr>
                </thead>
                <tbody className="divide-y divide-gray-100 dark:divide-gray-800">
-                  <tr className="group hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors">
-                     <td className="py-4 pl-4">
-                        <div className="flex items-center gap-3">
-                           <div className="size-10 rounded-full bg-gray-200 bg-cover bg-center" style={{backgroundImage: 'url("https://images.unsplash.com/photo-1531123897727-8f129e1688ce?auto=format&fit=crop&w=100&q=80")'}}></div>
-                           <span className="font-bold text-gray-900 dark:text-white">Amara Sy</span>
-                        </div>
-                     </td>
-                     <td className="py-4 text-gray-600 dark:text-gray-300 font-medium">Villa Sunset</td>
-                     <td className="py-4 text-sm text-gray-500">26 Oct - 29 Oct</td>
-                     <td className="py-4">
-                        <span className="inline-flex items-center gap-1 bg-green-100 text-green-700 px-2.5 py-1 rounded-lg text-xs font-bold">
-                           <span className="size-1.5 rounded-full bg-green-600"></span> Confirmé
-                        </span>
-                     </td>
-                     <td className="py-4 text-right pr-4 font-black text-gray-900 dark:text-white">450 000 F</td>
-                  </tr>
-                  <tr className="group hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors">
-                     <td className="py-4 pl-4">
-                        <div className="flex items-center gap-3">
-                           <div className="size-10 rounded-full bg-gray-200 bg-cover bg-center" style={{backgroundImage: 'url("https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=100&q=80")'}}></div>
-                           <span className="font-bold text-gray-900 dark:text-white">Lucas M.</span>
-                        </div>
-                     </td>
-                     <td className="py-4 text-gray-600 dark:text-gray-300 font-medium">Loft Abidjan</td>
-                     <td className="py-4 text-sm text-gray-500">28 Oct - 30 Oct</td>
-                     <td className="py-4">
-                        <span className="inline-flex items-center gap-1 bg-yellow-100 text-yellow-700 px-2.5 py-1 rounded-lg text-xs font-bold">
-                           <span className="size-1.5 rounded-full bg-yellow-600 animate-pulse"></span> En attente
-                        </span>
-                     </td>
-                     <td className="py-4 text-right pr-4 font-black text-gray-900 dark:text-white">180 000 F</td>
-                  </tr>
-                  <tr className="group hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors">
-                     <td className="py-4 pl-4">
-                        <div className="flex items-center gap-3">
-                           <div className="size-10 rounded-full bg-gray-200 bg-cover bg-center" style={{backgroundImage: 'url("https://images.unsplash.com/photo-1438761681033-6461ffad8d80?auto=format&fit=crop&w=100&q=80")'}}></div>
-                           <span className="font-bold text-gray-900 dark:text-white">Fatou D.</span>
-                        </div>
-                     </td>
-                     <td className="py-4 text-gray-600 dark:text-gray-300 font-medium">Toyota Prado</td>
-                     <td className="py-4 text-sm text-gray-500">02 Nov - 05 Nov</td>
-                     <td className="py-4">
-                        <span className="inline-flex items-center gap-1 bg-green-100 text-green-700 px-2.5 py-1 rounded-lg text-xs font-bold">
-                           <span className="size-1.5 rounded-full bg-green-600"></span> Confirmé
-                        </span>
-                     </td>
-                     <td className="py-4 text-right pr-4 font-black text-gray-900 dark:text-white">210 000 F</td>
-                  </tr>
+                  {myBookings.map((booking) => (
+                      <tr key={booking.id} className="group hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors">
+                         <td className="py-4 pl-4">
+                            <div className="flex items-center gap-3">
+                               <div className="size-10 rounded-full bg-gray-200 bg-cover bg-center" style={{backgroundImage: `url("${booking.guestAvatar}")`}}></div>
+                               <span className="font-bold text-gray-900 dark:text-white">{booking.guestName}</span>
+                            </div>
+                         </td>
+                         <td className="py-4 text-gray-600 dark:text-gray-300 font-medium truncate max-w-[200px]">{booking.title}</td>
+                         <td className="py-4 text-sm text-gray-500">{booking.dates}</td>
+                         <td className="py-4">
+                            <span className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-bold ${
+                                booking.status === 'Confirmé' ? 'bg-green-100 text-green-700' :
+                                booking.status === 'En attente' ? 'bg-yellow-100 text-yellow-700' :
+                                'bg-red-100 text-red-700'
+                            }`}>
+                               <span className={`size-1.5 rounded-full ${booking.status === 'Confirmé' ? 'bg-green-600' : booking.status === 'En attente' ? 'bg-yellow-600 animate-pulse' : 'bg-red-600'}`}></span> {booking.status}
+                            </span>
+                         </td>
+                         <td className="py-4 text-right pr-4 font-black text-gray-900 dark:text-white">{booking.totalAmount ? booking.totalAmount.toLocaleString() : booking.price} F</td>
+                      </tr>
+                  ))}
+                  {myBookings.length === 0 && (
+                      <tr><td colSpan={5} className="py-8 text-center text-gray-500">Aucune réservation récente.</td></tr>
+                  )}
                </tbody>
             </table>
          </div>

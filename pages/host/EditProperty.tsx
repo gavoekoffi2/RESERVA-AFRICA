@@ -1,15 +1,55 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
+import { useApp } from '../../context/AppContext';
 
 const EditProperty: React.FC = () => {
   const navigate = useNavigate();
   const { id } = useParams();
+  const { allProperties, updateProperty } = useApp();
+  
   const [step, setStep] = useState(1);
+  const [loading, setLoading] = useState(true);
+  
+  // Form State
+  const [title, setTitle] = useState('');
+  const [locationStr, setLocationStr] = useState('');
+  const [description, setDescription] = useState('');
+  const [price, setPrice] = useState<number>(0);
   const [category, setCategory] = useState<'stay' | 'car' | 'activity'>('stay');
+
+  useEffect(() => {
+      if (id && allProperties.length > 0) {
+          const prop = allProperties.find(p => p.id === Number(id));
+          if (prop) {
+              setTitle(prop.title);
+              setLocationStr(prop.location);
+              setPrice(prop.rawPrice);
+              setCategory(prop.type === 'Hébergement' ? 'stay' : prop.type === 'Voiture' ? 'car' : 'activity');
+              setDescription("Ceci est une description existante de la propriété..."); // In real app, comes from prop
+          }
+          setLoading(false);
+      }
+  }, [id, allProperties]);
 
   const handleNext = () => setStep(step + 1);
   const handleBack = () => setStep(step - 1);
-  const handleSubmit = () => navigate('/host/properties');
+  
+  const handleSubmit = () => {
+      const prop = allProperties.find(p => p.id === Number(id));
+      if (prop) {
+          updateProperty({
+              ...prop,
+              title,
+              location: locationStr,
+              rawPrice: price,
+              price: `${price.toLocaleString()} F`,
+              type: category === 'stay' ? 'Hébergement' : category === 'car' ? 'Voiture' : 'Activité',
+          });
+      }
+      navigate('/host/properties');
+  };
+
+  if (loading) return <div className="p-20 text-center">Chargement...</div>;
 
   return (
     <div className="p-8 max-w-4xl mx-auto">
@@ -17,7 +57,7 @@ const EditProperty: React.FC = () => {
          <Link to="/host/properties" className="text-gray-500 hover:text-black flex items-center gap-2 mb-4 text-sm font-bold">
             <span className="material-symbols-outlined text-sm">arrow_back</span> Retour aux propriétés
          </Link>
-         <h1 className="text-3xl font-bold mb-2">Modifier l'annonce</h1>
+         <h1 className="text-3xl font-bold mb-2">Modifier l'annonce #{id}</h1>
          <div className="flex gap-2">
             <div className={`h-1 flex-1 rounded-full ${step >= 1 ? 'bg-primary' : 'bg-gray-200'}`}></div>
             <div className={`h-1 flex-1 rounded-full ${step >= 2 ? 'bg-primary' : 'bg-gray-200'}`}></div>
@@ -64,15 +104,15 @@ const EditProperty: React.FC = () => {
                <h2 className="text-xl font-bold mb-2">Informations de base</h2>
                <div className="flex flex-col gap-2">
                   <label className="font-bold text-sm">Titre de l'annonce</label>
-                  <input type="text" defaultValue="Villa Prestige Océan" className="w-full p-3 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-800" />
+                  <input type="text" value={title} onChange={e => setTitle(e.target.value)} className="w-full p-3 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-800" />
                </div>
                <div className="flex flex-col gap-2">
                   <label className="font-bold text-sm">Localisation</label>
-                  <input type="text" defaultValue="Lomé, Baguida" className="w-full p-3 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-800" />
+                  <input type="text" value={locationStr} onChange={e => setLocationStr(e.target.value)} className="w-full p-3 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-800" />
                </div>
                <div className="flex flex-col gap-2">
                   <label className="font-bold text-sm">Description</label>
-                  <textarea rows={5} defaultValue="Magnifique villa en bord de mer..." className="w-full p-3 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-800"></textarea>
+                  <textarea rows={5} value={description} onChange={e => setDescription(e.target.value)} className="w-full p-3 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-800"></textarea>
                </div>
             </div>
          )}
@@ -101,7 +141,7 @@ const EditProperty: React.FC = () => {
                <h2 className="text-xl font-bold mb-2">Tarification</h2>
                <div className="flex flex-col gap-2">
                   <label className="font-bold text-sm">Prix par nuit / jour (FCFA)</label>
-                  <input type="number" defaultValue={250000} className="w-full p-3 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-800 text-lg font-bold" />
+                  <input type="number" value={price} onChange={e => setPrice(Number(e.target.value))} className="w-full p-3 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-800 text-lg font-bold" />
                </div>
                <div className="flex flex-col gap-4 p-4 bg-gray-50 dark:bg-gray-800 rounded-xl">
                   <div className="flex justify-between items-center">

@@ -27,6 +27,25 @@
               display: ["Plus Jakarta Sans", "sans-serif"],
               body: ["Noto Sans", "sans-serif"],
             },
+            animation: {
+              'shimmer': 'shimmer 2s infinite linear',
+              'ken-burns': 'kenburns 20s ease-in-out infinite alternate',
+              'float': 'float 6s ease-in-out infinite',
+            },
+            keyframes: {
+              shimmer: {
+                '0%': { backgroundPosition: '-1000px 0' },
+                '100%': { backgroundPosition: '1000px 0' },
+              },
+              kenburns: {
+                '0%': { transform: 'scale(1)' },
+                '100%': { transform: 'scale(1.1)' },
+              },
+              float: {
+                '0%, 100%': { transform: 'translateY(0)' },
+                '50%': { transform: 'translateY(-10px)' },
+              }
+            }
           },
         },
       };
@@ -44,20 +63,63 @@
       rel="stylesheet"
     />
     <style>
+      :root {
+        --elastic-curve: cubic-bezier(0.16, 1, 0.3, 1);
+      }
+
+      * {
+        transition-timing-function: var(--elastic-curve);
+      }
+
       .material-symbols-outlined {
         font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
       }
       .icon-filled {
         font-variation-settings: 'FILL' 1, 'wght' 400, 'GRAD' 0, 'opsz' 24;
       }
-      /* Hide scrollbar for Chrome, Safari and Opera */
-      .no-scrollbar::-webkit-scrollbar {
-          display: none;
+      
+      /* Smooth transitions for common properties */
+      .transition-all-custom {
+        transition: all 0.4s var(--elastic-curve);
       }
-      /* Hide scrollbar for IE, Edge and Firefox */
-      .no-scrollbar {
-          -ms-overflow-style: none;  /* IE and Edge */
-          scrollbar-width: none;  /* Firefox */
+
+      /* Global Reveal Animation */
+      @keyframes revealUp {
+        from { opacity: 0; transform: translateY(20px); }
+        to { opacity: 1; transform: translateY(0); }
+      }
+
+      .animate-reveal {
+        animation: revealUp 0.6s var(--elastic-curve) forwards;
+      }
+
+      /* Hover Effects */
+      .hover-lift {
+        transition: transform 0.3s var(--elastic-curve), box-shadow 0.3s var(--elastic-curve);
+      }
+      .hover-lift:hover {
+        transform: translateY(-6px);
+        box-shadow: 0 20px 40px -10px rgba(0,0,0,0.1);
+      }
+
+      /* Button Magnetic Feel */
+      .btn-active-scale:active {
+        transform: scale(0.96);
+      }
+
+      /* Hide scrollbar */
+      .no-scrollbar::-webkit-scrollbar { display: none; }
+      .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+
+      /* Skeleton Shimmer */
+      .shimmer-bg {
+        background: linear-gradient(90deg, #f0f0f0 25%, #f8f8f8 50%, #f0f0f0 75%);
+        background-size: 1000px 100%;
+        animation: shimmer 2s infinite linear;
+      }
+      .dark .shimmer-bg {
+        background: linear-gradient(90deg, #2d2420 25%, #3a2e29 50%, #2d2420 75%);
+        background-size: 1000px 100%;
       }
     </style>
   <script type="importmap">
@@ -71,7 +133,7 @@
 }
 </script>
 </head>
-  <body class="bg-background-light dark:bg-background-dark text-text-main dark:text-white font-display">
+  <body class="bg-background-light dark:bg-background-dark text-text-main dark:text-white font-display selection:bg-primary/30">
     <div id="root"></div>
   </body>
 </html>

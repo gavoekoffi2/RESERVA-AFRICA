@@ -3,7 +3,13 @@ import { Link } from 'react-router-dom';
 import { useApp } from '../../context/AppContext';
 
 const Properties: React.FC = () => {
-  const { properties } = useApp();
+  const { properties, deleteProperty } = useApp();
+
+  const handleDelete = (id: number) => {
+      if (window.confirm('Êtes-vous sûr de vouloir supprimer cette annonce ? Cette action est irréversible.')) {
+          deleteProperty(id);
+      }
+  };
 
   return (
     <div className="p-8 max-w-7xl mx-auto">
@@ -41,8 +47,12 @@ const Properties: React.FC = () => {
                   {property.price}
               </div>
               <div className="col-span-2 flex justify-end gap-2">
-                  <Link to={`/host/properties/edit/${property.id}`} className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg text-gray-500"><span className="material-symbols-outlined text-sm">edit</span></Link>
-                  <button className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg text-gray-500"><span className="material-symbols-outlined text-sm">more_horiz</span></button>
+                  <Link to={`/host/properties/edit/${property.id}`} className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg text-gray-500" title="Modifier">
+                      <span className="material-symbols-outlined text-sm">edit</span>
+                  </Link>
+                  <button onClick={() => handleDelete(property.id)} className="p-2 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg text-red-500" title="Supprimer">
+                      <span className="material-symbols-outlined text-sm">delete</span>
+                  </button>
               </div>
             </div>
           ))}
