@@ -157,13 +157,13 @@ const Header: React.FC<{ toggleTheme: () => void; isDark: boolean; settings: Loc
              
              <Link to="/" className={`flex items-center gap-3 group ${textClass}`}>
                 {siteAssets?.site_logo?.url ? (
-                    <img src={siteAssets.site_logo.url} className="h-10 w-auto object-contain" alt="Reseva" />
+                    <img src={siteAssets.site_logo.url} className="h-10 w-auto object-contain" alt="Reserve Africa" />
                 ) : (
                     <>
                         <div className={`size-10 rounded-full flex items-center justify-center shadow-lg transition-transform group-hover:scale-110 ${logoBgClass}`}>
                         <span className="material-symbols-outlined text-2xl">travel_explore</span>
                         </div>
-                        <h2 className="hidden md:block text-xl font-black tracking-tight leading-none">Reseva<span className="text-primary">.</span></h2>
+                        <h2 className="hidden md:block text-xl font-black tracking-tight leading-none italic">Reserve <span className="text-primary not-italic">Africa.</span></h2>
                     </>
                 )}
              </Link>
@@ -173,7 +173,7 @@ const Header: React.FC<{ toggleTheme: () => void; isDark: boolean; settings: Loc
             <Link to="/search/stays" className={navLinkClass(location.pathname.includes('/search/stays'))}>Hébergements</Link>
             <Link to="/search/cars" className={navLinkClass(location.pathname.includes('/search/cars'))}>Voitures</Link>
             <Link to="/search/attractions" className={navLinkClass(location.pathname.includes('/search/attractions'))}>Attractions</Link>
-            <Link to="/taxi" className={navLinkClass(location.pathname.includes('/taxi'))}>Taxis</Link>
+            <Link to="/taxi" className={navLinkClass(location.pathname.includes('/taxi'))}>Airport Taxi</Link>
           </nav>
 
           <div className="flex items-center gap-2">
@@ -239,7 +239,7 @@ const Header: React.FC<{ toggleTheme: () => void; isDark: boolean; settings: Loc
                     <Link to="/search/stays" className="flex items-center gap-4 p-4 hover:bg-gray-50 dark:hover:bg-gray-800 rounded-2xl transition-all font-black text-lg"><span className="material-symbols-outlined text-primary">bed</span> Hébergements</Link>
                     <Link to="/search/cars" className="flex items-center gap-4 p-4 hover:bg-gray-50 dark:hover:bg-gray-800 rounded-2xl transition-all font-black text-lg"><span className="material-symbols-outlined text-primary">directions_car</span> Voitures</Link>
                     <Link to="/search/attractions" className="flex items-center gap-4 p-4 hover:bg-gray-50 dark:hover:bg-gray-800 rounded-2xl transition-all font-black text-lg"><span className="material-symbols-outlined text-primary">attractions</span> Attractions</Link>
-                    <Link to="/taxi" className="flex items-center gap-4 p-4 hover:bg-gray-50 dark:hover:bg-gray-800 rounded-2xl transition-all font-black text-lg"><span className="material-symbols-outlined text-primary">local_taxi</span> Taxis aéroport</Link>
+                    <Link to="/taxi" className="flex items-center gap-4 p-4 hover:bg-gray-50 dark:hover:bg-gray-800 rounded-2xl transition-all font-black text-lg"><span className="material-symbols-outlined text-primary">local_taxi</span> Airport Taxi</Link>
                     <div className="h-px bg-gray-100 dark:bg-gray-800 my-2"></div>
                     <Link to="/become-a-host" className="bg-black text-white dark:bg-white dark:text-black p-5 rounded-2xl text-center font-black text-lg shadow-xl">Gagner de l'argent</Link>
                 </nav>
@@ -372,19 +372,19 @@ const Footer: React.FC<{ settings: LocationSettings }> = ({ settings }) => {
           <div>
             <Link to="/" className="inline-block mb-6">
                 {siteAssets?.site_logo?.url ? (
-                    <img src={siteAssets.site_logo.url} className="h-10 w-auto object-contain" alt="Reseva" />
+                    <img src={siteAssets.site_logo.url} className="h-10 w-auto object-contain" alt="Reserve Africa" />
                 ) : (
-                    <h2 className="text-2xl font-black text-gray-900 dark:text-white">Reseva Africa<span className="text-primary">.</span></h2>
+                    <h2 className="text-2xl font-black text-gray-900 dark:text-white italic">Reserve <span className="text-primary not-italic">Africa.</span></h2>
                 )}
             </Link>
             <p className="text-gray-500 text-sm font-medium leading-relaxed">La plateforme numéro 1 pour voyager, loger et se déplacer en toute confiance en Afrique de l'Ouest.</p>
           </div>
-          <div><h3 className="font-black text-gray-900 dark:text-white mb-6 uppercase tracking-widest text-xs">Découvrir</h3><ul className="space-y-3 text-sm font-bold text-gray-500"><li><Link to="/search/stays" className="hover:text-primary transition-colors">Hébergements</Link></li><li><Link to="/search/cars" className="hover:text-primary transition-colors">Voitures</Link></li><li><Link to="/search/attractions" className="hover:text-primary transition-colors">Activités</Link></li><li><Link to="/taxi" className="hover:text-primary transition-colors">Transferts Aéroport</Link></li></ul></div>
+          <div><h3 className="font-black text-gray-900 dark:text-white mb-6 uppercase tracking-widest text-xs">Découvrir</h3><ul className="space-y-3 text-sm font-bold text-gray-500"><li><Link to="/search/stays" className="hover:text-primary transition-colors">Hébergements</Link></li><li><Link to="/search/cars" className="hover:text-primary transition-colors">Voitures</Link></li><li><Link to="/search/attractions" className="hover:text-primary transition-colors">Activités</Link></li><li><Link to="/taxi" className="hover:text-primary transition-colors">Airport Taxi</Link></li></ul></div>
           <div><h3 className="font-black text-gray-900 dark:text-white mb-6 uppercase tracking-widest text-xs">Support</h3><ul className="space-y-3 text-sm font-bold text-gray-500"><li><Link to="/support" className="hover:text-primary transition-colors">Centre d'aide</Link></li><li><Link to="/support/trust" className="hover:text-primary transition-colors">Confiance & Sécurité</Link></li><li><Link to="/become-a-host" className="hover:text-primary transition-colors">Devenir Hôte</Link></li></ul></div>
           <div><h3 className="font-black text-gray-900 dark:text-white mb-6 uppercase tracking-widest text-xs">Légal</h3><ul className="space-y-3 text-sm font-bold text-gray-500"><li><Link to="/legal/terms" className="hover:text-primary transition-colors">Conditions</Link></li><li><Link to="/legal/privacy" className="hover:text-primary transition-colors">Confidentialité</Link></li></ul></div>
         </div>
         <div className="border-t border-gray-100 dark:border-gray-800 py-8 text-center px-4">
-            <p className="text-xs font-black text-gray-400 uppercase tracking-[0.3em]">© 2023 Reseva Africa. Tous droits réservés.</p>
+            <p className="text-xs font-black text-gray-400 uppercase tracking-[0.3em]">© 2023 Reserve Africa. Tous droits réservés.</p>
         </div>
       </footer>
     );
@@ -398,7 +398,7 @@ const HostLayout = () => {
         <div className="flex flex-col lg:flex-row h-screen overflow-hidden bg-[#f7f9fc] dark:bg-[#0f1115] font-display">
             <aside className="w-72 bg-white dark:bg-[#1e293b] border-r border-gray-100 dark:border-gray-800 hidden lg:flex flex-col">
                 <div className="p-8 border-b border-gray-100 dark:border-gray-800">
-                    <h2 className="font-black text-xl text-primary tracking-tighter uppercase">RESEVA HOST</h2>
+                    <h2 className="font-black text-xl text-primary tracking-tighter uppercase">RESERVE HOST</h2>
                 </div>
                 <nav className="p-4 space-y-1 flex-1">
                     {[

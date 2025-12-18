@@ -180,7 +180,7 @@ const parseMockDate = (dateStr: string, isEnd: boolean = false): Date => {
 const MOCK_USERS: User[] = [
   { id: 'u1', name: 'Jean Dupont', email: 'jean.dupont@email.com', role: 'GUEST', avatar: 'https://images.unsplash.com/photo-1531123897727-8f129e1688ce?auto=format&fit=crop&w=200&h=200', status: 'Active', joinDate: '12 Oct 2023', bio: 'Voyageur passionné.', location: 'Paris, France' },
   { id: 'u2', name: 'Kodjo Mensah', email: 'kodjo@host.com', role: 'HOST', avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=300&h=200', status: 'Active', joinDate: '05 Jan 2022', bio: 'Hôte expérimenté à Lomé.', location: 'Lomé, Togo' },
-  { id: 'a1', name: 'Super Admin', email: 'admin@reseva.africa', role: 'SUPER_ADMIN', avatar: 'https://ui-avatars.com/api/?name=Super+Admin&background=000&color=fff', status: 'Active', joinDate: '01 Jan 2023', permissions: [] },
+  { id: 'a1', name: 'Super Admin', email: 'admin@reserve.africa', role: 'SUPER_ADMIN', avatar: 'https://ui-avatars.com/api/?name=Super+Admin&background=000&color=fff', status: 'Active', joinDate: '01 Jan 2023', permissions: [] },
 ];
 
 const MOCK_PROPERTIES: Property[] = [
@@ -190,65 +190,65 @@ const MOCK_PROPERTIES: Property[] = [
 
 const DEFAULT_ASSETS: Record<string, SiteAsset> = {
     'site_logo': { id: 'site_logo', name: 'Logo de la Plateforme (URL)', url: '', category: 'logo' },
-    'hero_bg': { id: 'hero_bg', name: 'Image de Fond Accueil', url: 'https://images.unsplash.com/photo-1613977257363-707ba9348227?auto=format&fit=crop&w=2600&q=80', category: 'image' },
+    'hero_bg': { id: 'hero_bg', name: 'Image de Fond Accueil', url: 'https://images.unsplash.com/photo-1613977257363-707ba9348227?ixlib=rb-4.0.3&auto=format&fit=crop&w=2600&q=80', category: 'image' },
     'host_cta_bg': { id: 'host_cta_bg', name: 'Bannière Devenir Hôte', url: 'https://images.unsplash.com/photo-1543343132-73a7d2e06d91?auto=format&fit=crop&w=1200&q=80', category: 'image' },
     'become_host_hero': { id: 'become_host_hero', name: 'Page Devenir Hôte Hero', url: 'https://images.unsplash.com/photo-1556912173-3db4d6be6816?auto=format&fit=crop&w=2000&q=80', category: 'image' },
 };
 
 export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<User | null>(() => {
-      const saved = localStorage.getItem('reseva_user');
+      const saved = localStorage.getItem('reserve_user');
       return saved ? JSON.parse(saved) : null;
   });
 
   const [favorites, setFavorites] = useState<Set<number>>(() => {
-      const saved = localStorage.getItem('reseva_favorites');
+      const saved = localStorage.getItem('reserve_favorites');
       return saved ? new Set(JSON.parse(saved)) : new Set();
   });
 
   const [bookings, setBookings] = useState<Booking[]>(() => {
-      const saved = localStorage.getItem('reseva_bookings');
+      const saved = localStorage.getItem('reserve_bookings');
       return saved ? JSON.parse(saved) : [];
   });
 
   const [properties, setProperties] = useState<Property[]>(() => {
-      const saved = localStorage.getItem('reseva_properties');
+      const saved = localStorage.getItem('reserve_properties');
       return saved ? JSON.parse(saved) : MOCK_PROPERTIES;
   });
 
   const [reviews, setReviews] = useState<Review[]>(() => {
-      const saved = localStorage.getItem('reseva_reviews');
+      const saved = localStorage.getItem('reserve_reviews');
       return saved ? JSON.parse(saved) : [];
   });
 
   const [messages, setMessages] = useState<Message[]>(() => {
-      const saved = localStorage.getItem('reseva_messages');
+      const saved = localStorage.getItem('reserve_messages');
       return saved ? JSON.parse(saved) : [];
   });
 
   const [transactions, setTransactions] = useState<Transaction[]>(() => {
-      const saved = localStorage.getItem('reseva_transactions');
+      const saved = localStorage.getItem('reserve_transactions');
       return saved ? JSON.parse(saved) : [];
   });
 
   const [systemSettings, setSystemSettings] = useState<SystemSettings>(() => {
-      const saved = localStorage.getItem('reseva_settings');
+      const saved = localStorage.getItem('reserve_settings');
       return saved ? JSON.parse(saved) : { commissionRate: 15, serviceFeeRate: 5, maintenanceMode: false };
   });
 
   const [siteAssets, setSiteAssets] = useState<Record<string, SiteAsset>>(() => {
-      const saved = localStorage.getItem('reseva_assets');
+      const saved = localStorage.getItem('reserve_assets');
       return saved ? JSON.parse(saved) : DEFAULT_ASSETS;
   });
 
   const [allUsers, setAllUsers] = useState<User[]>(() => {
-      const saved = localStorage.getItem('reseva_all_users');
+      const saved = localStorage.getItem('reserve_all_users');
       return saved ? JSON.parse(saved) : MOCK_USERS;
   });
 
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [systemNotifications, setSystemNotifications] = useState<SystemNotification[]>(() => {
-      const saved = localStorage.getItem('reseva_sys_notifs');
+      const saved = localStorage.getItem('reserve_sys_notifs');
       return saved ? JSON.parse(saved) : [];
   });
 
@@ -256,17 +256,17 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
   const unreadNotificationCount = systemNotifications.filter(n => (!n.targetUserId || n.targetUserId === user?.id) && !n.read).length;
 
   useEffect(() => {
-      if (user) localStorage.setItem('reseva_user', JSON.stringify(user));
-      else localStorage.removeItem('reseva_user');
+      if (user) localStorage.setItem('reserve_user', JSON.stringify(user));
+      else localStorage.removeItem('reserve_user');
   }, [user]);
 
-  useEffect(() => { localStorage.setItem('reseva_bookings', JSON.stringify(bookings)); }, [bookings]);
-  useEffect(() => { localStorage.setItem('reseva_properties', JSON.stringify(properties)); }, [properties]);
-  useEffect(() => { localStorage.setItem('reseva_messages', JSON.stringify(messages)); }, [messages]);
-  useEffect(() => { localStorage.setItem('reseva_transactions', JSON.stringify(transactions)); }, [transactions]);
-  useEffect(() => { localStorage.setItem('reseva_sys_notifs', JSON.stringify(systemNotifications)); }, [systemNotifications]);
-  useEffect(() => { localStorage.setItem('reseva_assets', JSON.stringify(siteAssets)); }, [siteAssets]);
-  useEffect(() => { localStorage.setItem('reseva_all_users', JSON.stringify(allUsers)); }, [allUsers]);
+  useEffect(() => { localStorage.setItem('reserve_bookings', JSON.stringify(bookings)); }, [bookings]);
+  useEffect(() => { localStorage.setItem('reserve_properties', JSON.stringify(properties)); }, [properties]);
+  useEffect(() => { localStorage.setItem('reserve_messages', JSON.stringify(messages)); }, [messages]);
+  useEffect(() => { localStorage.setItem('reserve_transactions', JSON.stringify(transactions)); }, [transactions]);
+  useEffect(() => { localStorage.setItem('reserve_sys_notifs', JSON.stringify(systemNotifications)); }, [systemNotifications]);
+  useEffect(() => { localStorage.setItem('reserve_assets', JSON.stringify(siteAssets)); }, [siteAssets]);
+  useEffect(() => { localStorage.setItem('reserve_all_users', JSON.stringify(allUsers)); }, [allUsers]);
 
   const addNotification = (type: 'success' | 'error' | 'info', message: string) => {
     const id = Date.now().toString();
@@ -329,7 +329,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
   const addBooking = (booking: Booking) => {
     const property = properties.find(p => p.id === booking.propertyId);
     const hostId = property?.ownerId || 'u2';
-    const hostName = property?.owner || 'Reseva Host';
+    const hostName = property?.owner || 'Reserve Host';
     const newBooking = { ...booking, hostName, hostId, guestId: user?.id };
     setBookings(prev => [newBooking, ...prev]);
     

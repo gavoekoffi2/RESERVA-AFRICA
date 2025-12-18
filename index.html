@@ -3,7 +3,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Reseva Africa</title>
+    <title>Reserve Africa</title>
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
@@ -78,12 +78,10 @@
         font-variation-settings: 'FILL' 1, 'wght' 400, 'GRAD' 0, 'opsz' 24;
       }
       
-      /* Smooth transitions for common properties */
       .transition-all-custom {
         transition: all 0.4s var(--elastic-curve);
       }
 
-      /* Global Reveal Animation */
       @keyframes revealUp {
         from { opacity: 0; transform: translateY(20px); }
         to { opacity: 1; transform: translateY(0); }
@@ -93,7 +91,6 @@
         animation: revealUp 0.6s var(--elastic-curve) forwards;
       }
 
-      /* Hover Effects */
       .hover-lift {
         transition: transform 0.3s var(--elastic-curve), box-shadow 0.3s var(--elastic-curve);
       }
@@ -102,16 +99,13 @@
         box-shadow: 0 20px 40px -10px rgba(0,0,0,0.1);
       }
 
-      /* Button Magnetic Feel */
       .btn-active-scale:active {
         transform: scale(0.96);
       }
 
-      /* Hide scrollbar */
       .no-scrollbar::-webkit-scrollbar { display: none; }
       .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
 
-      /* Skeleton Shimmer */
       .shimmer-bg {
         background: linear-gradient(90deg, #f0f0f0 25%, #f8f8f8 50%, #f0f0f0 75%);
         background-size: 1000px 100%;

@@ -12,8 +12,7 @@ const Login: React.FC = () => {
   const handleLogin = (e: React.FormEvent) => {
     e.preventDefault();
     
-    // Check for specific admin credentials
-    if (email === 'admin@reseva.africa' && password === 'admin123') {
+    if (email === 'admin@reserve.africa' && password === 'admin123') {
         const admin = allUsers.find(u => u.email === email);
         if (admin) {
             login(admin);
@@ -22,7 +21,6 @@ const Login: React.FC = () => {
         }
     }
 
-    // Default regular login mock
     login({
         id: 'u1',
         name: 'Jean Dupont',
@@ -56,7 +54,7 @@ const Login: React.FC = () => {
       login({
           id: 'a1',
           name: 'Super Admin',
-          email: 'admin@reseva.africa',
+          email: 'admin@reserve.africa',
           avatar: 'https://ui-avatars.com/api/?name=Super+Admin&background=000&color=fff',
           role: 'SUPER_ADMIN',
           status: 'Active',
@@ -82,7 +80,7 @@ const Login: React.FC = () => {
       <div className="w-full max-w-md flex flex-col gap-6">
         <div className="flex flex-col gap-2 text-center">
           <h1 className="text-3xl font-black tracking-tight text-gray-900 dark:text-white">Bon retour parmi nous</h1>
-          <p className="text-gray-500 dark:text-gray-400 font-medium">Connectez-vous pour gérer vos réservations.</p>
+          <p className="text-gray-500 dark:text-gray-400 font-medium">Connectez-vous à Reserve Africa.</p>
         </div>
 
         <div className="border-b border-gray-200 dark:border-gray-700">
@@ -97,7 +95,6 @@ const Login: React.FC = () => {
         </div>
 
         <div className="flex flex-col gap-4 mt-2">
-          {/* Google Login Button */}
           <button 
             onClick={handleGoogleLogin}
             disabled={isGoogleLoading}
@@ -113,7 +110,7 @@ const Login: React.FC = () => {
                   <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z"/>
                   <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
                 </svg>
-                <span className="font-black text-sm text-gray-700 dark:text-gray-200">Se connecter avec Google</span>
+                <span className="font-black text-sm text-gray-700 dark:text-gray-200">Continuer avec Google</span>
               </>
             )}
           </button>
@@ -132,14 +129,14 @@ const Login: React.FC = () => {
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   className="w-full h-14 px-5 rounded-2xl border-2 border-gray-100 dark:border-gray-800 bg-gray-50/50 dark:bg-gray-800/20 text-gray-900 dark:text-white placeholder:text-gray-400 focus:outline-none focus:ring-4 focus:ring-primary/5 focus:border-primary transition-all font-bold" 
-                  placeholder="admin@reseva.africa" 
+                  placeholder="admin@reserve.africa" 
                   type="email" 
               />
             </label>
             <label className="flex flex-col gap-2">
               <div className="flex justify-between items-center">
                 <span className="text-xs font-black uppercase tracking-wider text-gray-400 dark:text-gray-500">Mot de passe</span>
-                <Link to="/forgot-password" university-none className="text-xs font-black text-primary hover:underline uppercase tracking-wider">Oublié ?</Link>
+                <Link to="/forgot-password" text-none className="text-xs font-black text-primary hover:underline uppercase tracking-wider">Oublié ?</Link>
               </div>
               <div className="relative flex items-center">
                 <input 
@@ -150,9 +147,6 @@ const Login: React.FC = () => {
                   placeholder="admin123" 
                   type="password" 
                 />
-                <button type="button" className="absolute right-0 top-0 bottom-0 px-4 text-gray-400 hover:text-primary transition-colors flex items-center justify-center">
-                  <span className="material-symbols-outlined text-[20px]">visibility</span>
-                </button>
               </div>
             </label>
             <button type="submit" className="w-full h-14 mt-2 bg-primary hover:bg-primary-dark text-white font-black rounded-2xl shadow-xl shadow-primary/20 transition-all-custom btn-active-scale uppercase tracking-widest text-sm">
@@ -161,7 +155,6 @@ const Login: React.FC = () => {
           </form>
         </div>
 
-        {/* Demo Access Links Enhanced */}
         <div className="mt-8 pt-6 border-t border-gray-100 dark:border-gray-800 text-center animate-reveal" style={{animationDelay: '0.2s'}}>
             <p className="text-[10px] text-gray-400 mb-6 uppercase font-black tracking-[0.2em]">Tester la plateforme (Accès Rapide)</p>
             <div className="grid grid-cols-2 gap-4 px-2">
