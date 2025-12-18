@@ -125,6 +125,7 @@ interface AppContextType {
   logout: () => void;
   updateUser: (data: Partial<User>) => void;
   upgradeToHost: () => void;
+  toggleUserRole: (email: string) => void;
   favorites: Set<number>;
   toggleFavorite: (id: number) => void;
   bookings: Booking[];
@@ -188,9 +189,10 @@ const MOCK_PROPERTIES: Property[] = [
 ];
 
 const DEFAULT_ASSETS: Record<string, SiteAsset> = {
-    'hero_bg': { id: 'hero_bg', name: 'Hero Image de Fond', url: 'https://images.unsplash.com/photo-1613977257363-707ba9348227?ixlib=rb-4.0.3&auto=format&fit=crop&w=2600&q=80', category: 'image' },
+    'site_logo': { id: 'site_logo', name: 'Logo de la Plateforme (URL)', url: '', category: 'logo' },
+    'hero_bg': { id: 'hero_bg', name: 'Image de Fond Accueil', url: 'https://images.unsplash.com/photo-1613977257363-707ba9348227?auto=format&fit=crop&w=2600&q=80', category: 'image' },
     'host_cta_bg': { id: 'host_cta_bg', name: 'Bannière Devenir Hôte', url: 'https://images.unsplash.com/photo-1543343132-73a7d2e06d91?auto=format&fit=crop&w=1200&q=80', category: 'image' },
-    'become_host_hero': { id: 'become_host_hero', name: 'Héros Page Hôte', url: 'https://images.unsplash.com/photo-1556912173-3db4d6be6816?auto=format&fit=crop&w=2000&q=80', category: 'image' },
+    'become_host_hero': { id: 'become_host_hero', name: 'Page Devenir Hôte Hero', url: 'https://images.unsplash.com/photo-1556912173-3db4d6be6816?auto=format&fit=crop&w=2000&q=80', category: 'image' },
 };
 
 export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
@@ -264,6 +266,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
   useEffect(() => { localStorage.setItem('reseva_transactions', JSON.stringify(transactions)); }, [transactions]);
   useEffect(() => { localStorage.setItem('reseva_sys_notifs', JSON.stringify(systemNotifications)); }, [systemNotifications]);
   useEffect(() => { localStorage.setItem('reseva_assets', JSON.stringify(siteAssets)); }, [siteAssets]);
+  useEffect(() => { localStorage.setItem('reseva_all_users', JSON.stringify(allUsers)); }, [allUsers]);
 
   const addNotification = (type: 'success' | 'error' | 'info', message: string) => {
     const id = Date.now().toString();
@@ -298,6 +301,18 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
       }
   };
 
+  const toggleUserRole = (email: string) => {
+      setAllUsers(prev => prev.map(u => {
+          if (u.email === email) {
+              const newRole = u.role === 'HOST' ? 'GUEST' : 'HOST';
+              if (user?.email === email) setUser({ ...user, role: newRole as any });
+              return { ...u, role: newRole as any };
+          }
+          return u;
+      }));
+      addNotification('success', 'Rôle de l\'utilisateur mis à jour.');
+  };
+
   const toggleFavorite = (id: number) => {
     setFavorites(prev => {
       const newFav = new Set(prev);
@@ -312,8 +327,10 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
   };
 
   const addBooking = (booking: Booking) => {
-    const hostId = properties.find(p => p.id === booking.propertyId)?.ownerId || 'u2';
-    const newBooking = { ...booking, bookingDate: new Date().toISOString().split('T')[0], guestId: user?.id, hostId };
+    const property = properties.find(p => p.id === booking.propertyId);
+    const hostId = property?.ownerId || 'u2';
+    const hostName = property?.owner || 'Reseva Host';
+    const newBooking = { ...booking, hostName, hostId, guestId: user?.id };
     setBookings(prev => [newBooking, ...prev]);
     
     const newNotif: SystemNotification = { id: `sn-${Date.now()}`, title: 'Réservation confirmée', message: `Votre réservation pour ${booking.title} est validée.`, date: 'À l\'instant', read: false, type: 'booking', targetUserId: user?.id };
@@ -324,7 +341,8 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
 
   const checkAvailability = (propertyId: number, start: Date, end: Date): boolean => {
       const property = properties.find(p => p.id === propertyId);
-      if (property?.blockedDates) {
+      if (!property) return true;
+      if (property.blockedDates) {
           let curr = new Date(start);
           while (curr <= end) {
               if (property.blockedDates.includes(curr.toISOString().split('T')[0])) return false;
@@ -423,12 +441,12 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
           ...prev,
           [id]: { ...prev[id], url }
       }));
-      addNotification('success', 'Image du site mise à jour avec succès.');
+      addNotification('success', 'Élément du site mis à jour.');
   };
 
   return (
     <AppContext.Provider value={{ 
-      user, login, logout, updateUser, upgradeToHost, favorites, toggleFavorite, 
+      user, login, logout, updateUser, upgradeToHost, toggleUserRole, favorites, toggleFavorite, 
       bookings, addBooking, updateBookingStatus, checkAvailability,
       properties, allProperties: properties, addProperty, updateProperty, deleteProperty, updatePropertyStatus, togglePropertyBlock,
       reviews, addReview, messages, sendMessage, markMessagesRead, unreadMessageCount, allUsers, toggleUserStatus: (e) => setAllUsers(prev => prev.map(u => u.email === e ? { ...u, status: u.status === 'Active' ? 'Suspended' : 'Active' } : u)), createAdmin: (a) => setAllUsers(prev => [a, ...prev]),
