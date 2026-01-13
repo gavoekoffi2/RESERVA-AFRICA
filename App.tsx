@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { HashRouter, Routes, Route, Link, useLocation, Outlet, Navigate } from 'react-router-dom';
+import { HashRouter, Routes, Route, Link, useLocation, Outlet, Navigate, useNavigate } from 'react-router-dom';
 import Login from './pages/auth/Login';
 import Register from './pages/auth/Register';
 import ForgotPassword from './pages/auth/ForgotPassword';
@@ -15,8 +15,8 @@ import HostReviews from './pages/host/Reviews';
 import ReservationDetails from './pages/host/ReservationDetails';
 import SearchCars from './pages/guest/SearchCars';
 import CarDetails from './pages/guest/CarDetails';
-import SearchAttractions from './pages/guest/SearchAttractions';
-import AttractionDetails from './pages/guest/AttractionDetails';
+import SearchExperiences from './pages/guest/SearchExperiences';
+import ExperienceDetails from './pages/guest/ExperienceDetails';
 import SearchStays from './pages/guest/SearchStays';
 import StayDetails from './pages/guest/StayDetails';
 import AirportTaxi from './pages/guest/AirportTaxi';
@@ -37,9 +37,8 @@ import TrustSafety from './pages/support/TrustSafety';
 import Terms from './pages/legal/Terms';
 import Privacy from './pages/legal/Privacy';
 import NotFound from './pages/NotFound';
-import { AppProvider, useApp, User } from './context/AppContext';
 
-// Admin Pages
+// --- Admin Imports ---
 import AdminDashboard from './pages/admin/AdminDashboard';
 import AdminProperties from './pages/admin/AdminProperties';
 import AdminUsers from './pages/admin/AdminUsers';
@@ -48,6 +47,9 @@ import AdminTeam from './pages/admin/AdminTeam';
 import AdminSystemSettings from './pages/admin/AdminSystemSettings';
 import AdminBookings from './pages/admin/AdminBookings';
 import AdminMedia from './pages/admin/AdminMedia';
+import AdminRequests from './pages/admin/AdminRequests';
+
+import { AppProvider, useApp } from './context/AppContext';
 
 // --- Types ---
 interface LocationSettings {
@@ -77,10 +79,10 @@ const ToastContainer = () => {
     return (
         <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-[300] flex flex-col gap-3 w-full max-w-sm px-4">
             {notifications.map(n => (
-                <div key={n.id} className={`flex items-center gap-3 p-4 rounded-xl shadow-2xl border animate-fade-up ${
-                    n.type === 'success' ? 'bg-green-50 border-green-200 text-green-800' :
-                    n.type === 'error' ? 'bg-red-50 border-red-200 text-red-800' :
-                    'bg-white dark:bg-[#1e293b] border-gray-200 dark:border-gray-700 text-gray-800 dark:text-white'
+                <div key={n.id} className={`flex items-center gap-3 p-4 rounded-xl shadow-2xl border border-white/20 animate-fade-up ${
+                    n.type === 'success' ? 'bg-green-600 text-white' :
+                    n.type === 'error' ? 'bg-red-600 text-white' :
+                    'bg-black text-white'
                 }`}>
                     <span className="material-symbols-outlined">
                         {n.type === 'success' ? 'check_circle' : n.type === 'error' ? 'error' : 'info'}
@@ -131,7 +133,7 @@ const Header: React.FC<{ toggleTheme: () => void; isDark: boolean; settings: Loc
   
   const headerClasses = `fixed top-0 left-0 w-full z-[100] transition-all duration-300 ease-in-out px-4 md:px-10 ${
     isTransparent 
-      ? 'bg-transparent py-6' 
+      ? 'bg-transparent py-4' 
       : 'bg-white/90 dark:bg-[#1a202c]/95 backdrop-blur-md shadow-sm py-3 border-b border-gray-100 dark:border-gray-800'
   }`;
 
@@ -150,11 +152,9 @@ const Header: React.FC<{ toggleTheme: () => void; isDark: boolean; settings: Loc
       <header className={headerClasses}>
         <div className="max-w-[1920px] mx-auto flex items-center justify-between h-full">
           <div className="flex items-center gap-4">
-             {/* Mobile Menu Button */}
              <button onClick={() => setMobileMenuOpen(!mobileMenuOpen)} className={`lg:hidden p-2 rounded-full ${textClass} hover:bg-black/5`}>
                 <span className="material-symbols-outlined text-[28px]">{mobileMenuOpen ? 'close' : 'menu'}</span>
              </button>
-             
              <Link to="/" className={`flex items-center gap-3 group ${textClass}`}>
                 {siteAssets?.site_logo?.url ? (
                     <img src={siteAssets.site_logo.url} className="h-10 w-auto object-contain" alt="Reserve Africa" />
@@ -163,16 +163,16 @@ const Header: React.FC<{ toggleTheme: () => void; isDark: boolean; settings: Loc
                         <div className={`size-10 rounded-full flex items-center justify-center shadow-lg transition-transform group-hover:scale-110 ${logoBgClass}`}>
                         <span className="material-symbols-outlined text-2xl">travel_explore</span>
                         </div>
-                        <h2 className="hidden md:block text-xl font-black tracking-tight leading-none italic">Reserve <span className="text-primary not-italic">Africa.</span></h2>
+                        <h2 className="hidden md:block text-xl font-black tracking-tight leading-none italic">Reseva <span className="text-primary not-italic">Africa.</span></h2>
                     </>
                 )}
              </Link>
           </div>
           
           <nav className="hidden lg:flex items-center gap-1">
-            <Link to="/search/stays" className={navLinkClass(location.pathname.includes('/search/stays'))}>Hébergements</Link>
+            <Link to="/search/stays" className={navLinkClass(location.pathname.includes('/search/stays'))}>Séjours</Link>
             <Link to="/search/cars" className={navLinkClass(location.pathname.includes('/search/cars'))}>Voitures</Link>
-            <Link to="/search/attractions" className={navLinkClass(location.pathname.includes('/search/attractions'))}>Attractions</Link>
+            <Link to="/search/experiences" className={navLinkClass(location.pathname.includes('/search/experiences'))}>Expériences</Link>
             <Link to="/taxi" className={navLinkClass(location.pathname.includes('/taxi'))}>Airport Taxi</Link>
           </nav>
 
@@ -196,7 +196,7 @@ const Header: React.FC<{ toggleTheme: () => void; isDark: boolean; settings: Loc
                 <div className="relative">
                     <div onClick={() => setProfileMenuOpen(!profileMenuOpen)} className={`flex items-center gap-1 rounded-full p-1 border cursor-pointer hover:shadow-md transition-all relative ${isTransparent ? 'bg-black/20 border-white/30 text-white' : 'bg-white dark:bg-[#1e293b] border-gray-200 dark:border-gray-700'}`}>
                         <div className="ml-1 size-9 rounded-full bg-cover bg-center border-2 border-white dark:border-gray-600 shadow-sm" style={{backgroundImage: `url("${user.avatar}")`}}></div>
-                        {(unreadMessageCount + unreadNotificationCount) > 0 && <span className="absolute -top-1 -right-1 size-4 bg-primary border-2 border-white dark:border-gray-800 rounded-full animate-pulse"></span>}
+                        {(unreadMessageCount + unreadNotificationCount) > 0 && <span className="absolute -top-1 -right-1 size-4 font-black text-gray-900 bg-primary border-2 border-white dark:border-gray-800 rounded-full animate-pulse"></span>}
                         <span className="material-symbols-outlined ml-1 mr-1 text-[20px] hidden md:block">expand_more</span>
                     </div>
                     {profileMenuOpen && (
@@ -231,20 +231,6 @@ const Header: React.FC<{ toggleTheme: () => void; isDark: boolean; settings: Loc
             )}
           </div>
         </div>
-        
-        {/* Mobile Navigation Drawer */}
-        {mobileMenuOpen && (
-            <div className="lg:hidden absolute top-full left-0 w-full bg-white dark:bg-[#1a202c] border-b border-gray-100 dark:border-gray-800 animate-reveal shadow-2xl z-50 overflow-hidden rounded-b-[40px]">
-                <nav className="flex flex-col p-6 gap-4">
-                    <Link to="/search/stays" className="flex items-center gap-4 p-4 hover:bg-gray-50 dark:hover:bg-gray-800 rounded-2xl transition-all font-black text-lg"><span className="material-symbols-outlined text-primary">bed</span> Hébergements</Link>
-                    <Link to="/search/cars" className="flex items-center gap-4 p-4 hover:bg-gray-50 dark:hover:bg-gray-800 rounded-2xl transition-all font-black text-lg"><span className="material-symbols-outlined text-primary">directions_car</span> Voitures</Link>
-                    <Link to="/search/attractions" className="flex items-center gap-4 p-4 hover:bg-gray-50 dark:hover:bg-gray-800 rounded-2xl transition-all font-black text-lg"><span className="material-symbols-outlined text-primary">attractions</span> Attractions</Link>
-                    <Link to="/taxi" className="flex items-center gap-4 p-4 hover:bg-gray-50 dark:hover:bg-gray-800 rounded-2xl transition-all font-black text-lg"><span className="material-symbols-outlined text-primary">local_taxi</span> Airport Taxi</Link>
-                    <div className="h-px bg-gray-100 dark:bg-gray-800 my-2"></div>
-                    <Link to="/become-a-host" className="bg-black text-white dark:bg-white dark:text-black p-5 rounded-2xl text-center font-black text-lg shadow-xl">Gagner de l'argent</Link>
-                </nav>
-            </div>
-        )}
       </header>
       {!isLanding && <div className="h-20" />}
     </>
@@ -292,8 +278,8 @@ const App: React.FC = () => {
               <Route path="/search/stays/:id" element={<StayDetails />} />
               <Route path="/search/cars" element={<SearchCars />} />
               <Route path="/search/cars/:id" element={<CarDetails />} />
-              <Route path="/search/attractions" element={<SearchAttractions />} />
-              <Route path="/search/attractions/:id" element={<AttractionDetails />} />
+              <Route path="/search/experiences" element={<SearchExperiences />} />
+              <Route path="/search/experiences/:id" element={<ExperienceDetails />} />
               <Route path="/taxi" element={<AirportTaxi />} />
               
               <Route path="/become-a-host" element={<BecomeHost />} />
@@ -331,6 +317,7 @@ const App: React.FC = () => {
                   <Route path="dashboard" element={<AdminDashboard />} />
                   <Route path="properties" element={<AdminProperties />} />
                   <Route path="users" element={<AdminUsers />} />
+                  <Route path="requests" element={<AdminRequests />} />
                   <Route path="finance" element={<AdminFinance />} />
                   <Route path="team" element={<AdminTeam />} />
                   <Route path="system" element={<AdminSystemSettings />} />
@@ -374,17 +361,22 @@ const Footer: React.FC<{ settings: LocationSettings }> = ({ settings }) => {
                 {siteAssets?.site_logo?.url ? (
                     <img src={siteAssets.site_logo.url} className="h-10 w-auto object-contain" alt="Reserve Africa" />
                 ) : (
-                    <h2 className="text-2xl font-black text-gray-900 dark:text-white italic">Reserve <span className="text-primary not-italic">Africa.</span></h2>
+                    <h2 className="text-2xl font-black text-gray-900 dark:text-white italic">Reseva <span className="text-primary not-italic">Africa.</span></h2>
                 )}
             </Link>
-            <p className="text-gray-500 text-sm font-medium leading-relaxed">La plateforme numéro 1 pour voyager, loger et se déplacer en toute confiance en Afrique de l'Ouest.</p>
+            <p className="text-gray-500 text-sm font-medium leading-relaxed">La plateforme numéro 1 pour voyager, loger et se déplacer en toute confiance en Afrique.</p>
+            <div className="flex gap-4 mt-6">
+                <a href="#" className="w-10 h-10 rounded-full bg-white dark:bg-gray-800 shadow-sm flex items-center justify-center text-gray-400 hover:text-primary transition-all"><i className="material-symbols-outlined text-xl">share</i></a>
+                <a href="#" className="w-10 h-10 rounded-full bg-white dark:bg-gray-800 shadow-sm flex items-center justify-center text-gray-400 hover:text-primary transition-all"><i className="material-symbols-outlined text-xl">public</i></a>
+                <a href="#" className="w-10 h-10 rounded-full bg-white dark:bg-gray-800 shadow-sm flex items-center justify-center text-gray-400 hover:text-primary transition-all"><i className="material-symbols-outlined text-xl">thumb_up</i></a>
+            </div>
           </div>
-          <div><h3 className="font-black text-gray-900 dark:text-white mb-6 uppercase tracking-widest text-xs">Découvrir</h3><ul className="space-y-3 text-sm font-bold text-gray-500"><li><Link to="/search/stays" className="hover:text-primary transition-colors">Hébergements</Link></li><li><Link to="/search/cars" className="hover:text-primary transition-colors">Voitures</Link></li><li><Link to="/search/attractions" className="hover:text-primary transition-colors">Activités</Link></li><li><Link to="/taxi" className="hover:text-primary transition-colors">Airport Taxi</Link></li></ul></div>
+          <div><h3 className="font-black text-gray-900 dark:text-white mb-6 uppercase tracking-widest text-xs">Découvrir</h3><ul className="space-y-3 text-sm font-bold text-gray-500"><li><Link to="/search/stays" className="hover:text-primary transition-colors">Séjours</Link></li><li><Link to="/search/cars" className="hover:text-primary transition-colors">Voitures</Link></li><li><Link to="/search/experiences" className="hover:text-primary transition-colors">Expériences</Link></li><li><Link to="/taxi" className="hover:text-primary transition-colors">Airport Taxi</Link></li></ul></div>
           <div><h3 className="font-black text-gray-900 dark:text-white mb-6 uppercase tracking-widest text-xs">Support</h3><ul className="space-y-3 text-sm font-bold text-gray-500"><li><Link to="/support" className="hover:text-primary transition-colors">Centre d'aide</Link></li><li><Link to="/support/trust" className="hover:text-primary transition-colors">Confiance & Sécurité</Link></li><li><Link to="/become-a-host" className="hover:text-primary transition-colors">Devenir Hôte</Link></li></ul></div>
           <div><h3 className="font-black text-gray-900 dark:text-white mb-6 uppercase tracking-widest text-xs">Légal</h3><ul className="space-y-3 text-sm font-bold text-gray-500"><li><Link to="/legal/terms" className="hover:text-primary transition-colors">Conditions</Link></li><li><Link to="/legal/privacy" className="hover:text-primary transition-colors">Confidentialité</Link></li></ul></div>
         </div>
         <div className="border-t border-gray-100 dark:border-gray-800 py-8 text-center px-4">
-            <p className="text-xs font-black text-gray-400 uppercase tracking-[0.3em]">© 2023 Reserve Africa. Tous droits réservés.</p>
+            <p className="text-xs font-black text-gray-400 uppercase tracking-[0.3em]">© 2023 Reseva Africa. Tous droits réservés.</p>
         </div>
       </footer>
     );
@@ -398,7 +390,7 @@ const HostLayout = () => {
         <div className="flex flex-col lg:flex-row h-screen overflow-hidden bg-[#f7f9fc] dark:bg-[#0f1115] font-display">
             <aside className="w-72 bg-white dark:bg-[#1e293b] border-r border-gray-100 dark:border-gray-800 hidden lg:flex flex-col">
                 <div className="p-8 border-b border-gray-100 dark:border-gray-800">
-                    <h2 className="font-black text-xl text-primary tracking-tighter uppercase">RESERVE HOST</h2>
+                    <h2 className="font-black text-xl text-primary tracking-tighter uppercase">RESEVA HOST</h2>
                 </div>
                 <nav className="p-4 space-y-1 flex-1">
                     {[
@@ -442,6 +434,7 @@ const AdminLayout = () => {
                 </div>
                 <nav className="p-4 flex flex-col gap-1 flex-1 overflow-y-auto no-scrollbar">
                     <Link to="/admin/dashboard" className="flex items-center gap-3 p-4 hover:bg-white/10 rounded-2xl transition-colors font-bold"><span className="material-symbols-outlined">dashboard</span> Dashboard</Link>
+                    <Link to="/admin/requests" className="flex items-center gap-3 p-4 hover:bg-white/10 rounded-2xl transition-colors font-bold"><span className="material-symbols-outlined">how_to_reg</span> Candidatures</Link>
                     <Link to="/admin/properties" className="flex items-center gap-3 p-4 hover:bg-white/10 rounded-2xl transition-colors font-bold"><span className="material-symbols-outlined">rule</span> Modération</Link>
                     <Link to="/admin/bookings" className="flex items-center gap-3 p-4 hover:bg-white/10 rounded-2xl transition-colors font-bold"><span className="material-symbols-outlined">book_online</span> Réservations</Link>
                     <Link to="/admin/users" className="flex items-center gap-3 p-4 hover:bg-white/10 rounded-2xl transition-colors font-bold"><span className="material-symbols-outlined">group</span> Utilisateurs</Link>

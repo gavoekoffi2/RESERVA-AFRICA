@@ -2,6 +2,19 @@ import React, { useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useApp } from '../../context/AppContext';
 
+const COUNTRY_CODES = [
+  { code: '+228', country: 'Togo', flag: '🇹🇬' },
+  { code: '+229', country: 'Bénin', flag: '🇧🇯' },
+  { code: '+225', country: 'Côte d\'Ivoire', flag: '🇨🇮' },
+  { code: '+221', country: 'Sénégal', flag: '🇸🇳' },
+  { code: '+233', country: 'Ghana', flag: '🇬🇭' },
+  { code: '+234', country: 'Nigeria', flag: '🇳🇬' },
+  { code: '+226', country: 'Burkina Faso', flag: '🇧🇫' },
+  { code: '+223', country: 'Mali', flag: '🇲🇱' },
+  { code: '+227', country: 'Niger', flag: '🇳🇪' },
+  { code: '+224', country: 'Guinée', flag: '🇬🇳' },
+];
+
 const Payment: React.FC = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
@@ -9,15 +22,12 @@ const Payment: React.FC = () => {
   const type = searchParams.get('type') || 'stay';
   const checkinParam = searchParams.get('checkin');
   const checkoutParam = searchParams.get('checkout');
-  // Removed explicit totalParam because we need to recalculate based on updated fees
-  // or verify integrity. For now, we trust the flow but recalc fee.
 
   const { addNotification, allProperties, addBooking, user, systemSettings } = useApp();
   
   const property = allProperties.find(p => p.id === Number(id));
   const displayProperty = property || { title: 'Service', price: '0 F', rawPrice: 0, image: '', location: '', owner: 'Reseva Host' };
   
-  // Recalculate duration/base price to be safe
   const start = checkinParam ? new Date(checkinParam) : new Date();
   const end = checkoutParam ? new Date(checkoutParam) : new Date(new Date().setDate(start.getDate() + 3));
   const diffDays = Math.max(1, Math.ceil(Math.abs(end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24)));
@@ -29,6 +39,7 @@ const Payment: React.FC = () => {
 
   const [method, setMethod] = useState<'mobile' | 'bank'>('mobile');
   const [mobileProvider, setMobileProvider] = useState<'mtn' | 'orange' | 'moov' | 'wave'>('mtn');
+  const [selectedCountryCode, setSelectedCountryCode] = useState(COUNTRY_CODES[0]);
   const [phoneNumber, setPhoneNumber] = useState('');
   const [isProcessing, setIsProcessing] = useState(false);
 
@@ -39,13 +50,9 @@ const Payment: React.FC = () => {
     }
 
     setIsProcessing(true);
-    
-    // Generate Booking ID
     const bookingId = `${type === 'stay' ? 'RES' : type === 'car' ? 'CAR' : 'ACT'}-${Date.now().toString().slice(-6)}`;
 
-    // Simulate Payment Processing
     setTimeout(() => {
-        // Create Booking Transaction
         addBooking({
             id: bookingId,
             title: displayProperty.title,
@@ -79,7 +86,7 @@ const Payment: React.FC = () => {
           <div className="flex gap-6 justify-between items-end mb-3">
             <p className="font-medium text-gray-500">Étape 2 sur 3</p>
             <div className="flex items-center gap-2 text-xs font-bold text-green-600 bg-green-50 px-3 py-1 rounded-full">
-                <span className="material-symbols-outlined text-sm">lock</span> Paiement sécurisé par Monero
+                <span className="material-symbols-outlined text-sm">lock</span> Paiement sécurisé
             </div>
           </div>
           <div className="rounded-full bg-[#e7d7cf] h-2 w-full overflow-hidden">
@@ -94,7 +101,6 @@ const Payment: React.FC = () => {
                 <p className="text-gray-500 mt-1">Choisissez votre mode de paiement sécurisé.</p>
             </div>
             
-            {/* Payment Method Tabs */}
             <div className="flex p-1 bg-gray-100 dark:bg-gray-800 rounded-xl">
                 <button 
                     onClick={() => setMethod('mobile')}
@@ -118,7 +124,6 @@ const Payment: React.FC = () => {
                 </button>
             </div>
 
-            {/* Mobile Money Form */}
             {method === 'mobile' && (
               <div className="p-6 rounded-2xl bg-white dark:bg-[#1e293b] border border-gray-200 dark:border-gray-700 shadow-sm animate-fade-in">
                 <h3 className="font-bold text-lg mb-4 text-gray-900 dark:text-white">Opérateur Mobile</h3>
@@ -147,26 +152,33 @@ const Payment: React.FC = () => {
                 </div>
 
                 <label className="block mb-2 text-sm font-bold text-gray-700 dark:text-gray-300">Numéro de téléphone</label>
-                <div className="relative">
-                    <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-                        <span className="text-gray-500 font-bold">+228</span>
-                    </div>
-                    <input 
-                        type="tel" 
-                        value={phoneNumber}
-                        onChange={(e) => setPhoneNumber(e.target.value)}
-                        placeholder="90 00 00 00" 
-                        className="w-full pl-16 pr-4 py-3.5 rounded-xl border border-gray-300 dark:border-gray-600 bg-transparent dark:text-white focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all font-bold text-lg tracking-wide" 
-                    />
-                    <div className="absolute inset-y-0 right-0 pr-4 flex items-center pointer-events-none">
-                        <span className="material-symbols-outlined text-gray-400">smartphone</span>
+                <div className="flex gap-2">
+                    <select 
+                        value={selectedCountryCode.code}
+                        onChange={(e) => setSelectedCountryCode(COUNTRY_CODES.find(c => c.code === e.target.value) || COUNTRY_CODES[0])}
+                        className="bg-gray-50 dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-xl px-4 py-3.5 font-bold text-gray-900 dark:text-white outline-none focus:ring-2 focus:ring-primary/20"
+                    >
+                        {COUNTRY_CODES.map(c => (
+                            <option key={c.code} value={c.code}>{c.flag} {c.code}</option>
+                        ))}
+                    </select>
+                    <div className="relative flex-1">
+                        <input 
+                            type="tel" 
+                            value={phoneNumber}
+                            onChange={(e) => setPhoneNumber(e.target.value)}
+                            placeholder="00 00 00 00" 
+                            className="w-full px-4 py-3.5 rounded-xl border border-gray-300 dark:border-gray-600 bg-transparent dark:text-white focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all font-bold text-lg tracking-wide" 
+                        />
+                        <div className="absolute inset-y-0 right-0 pr-4 flex items-center pointer-events-none">
+                            <span className="material-symbols-outlined text-gray-400">smartphone</span>
+                        </div>
                     </div>
                 </div>
-                <p className="text-xs text-gray-500 mt-2">Un message de confirmation vous sera envoyé pour valider la transaction.</p>
+                <p className="text-xs text-gray-500 mt-4">Paiement sécurisé par authentification push sur votre mobile {selectedCountryCode.country}.</p>
               </div>
             )}
 
-            {/* Bank Transfer Form */}
             {method === 'bank' && (
               <div className="p-6 rounded-2xl bg-white dark:bg-[#1e293b] border border-gray-200 dark:border-gray-700 shadow-sm animate-fade-in">
                 <div className="bg-blue-50 dark:bg-blue-900/20 p-4 rounded-xl flex gap-3 mb-6">
@@ -175,7 +187,6 @@ const Payment: React.FC = () => {
                         Veuillez effectuer le virement sur le compte ci-dessous. Votre réservation sera confirmée dès réception des fonds (24-48h).
                     </p>
                 </div>
-
                 <div className="space-y-4">
                     <div className="flex justify-between p-3 border-b border-gray-100 dark:border-gray-700">
                         <span className="text-gray-500">Banque</span>
@@ -188,13 +199,9 @@ const Payment: React.FC = () => {
                     <div className="flex justify-between p-3 border-b border-gray-100 dark:border-gray-700">
                         <span className="text-gray-500">IBAN</span>
                         <div className="text-right">
-                            <span className="font-mono font-bold text-gray-900 dark:text-white block">TG76 3005 5029 9100 0123 4567 89</span>
+                            <span className="font-mono font-bold text-gray-900 dark:text-white block text-sm">TG76 3005 5029 9100 0123 4567 89</span>
                             <button className="text-xs text-primary font-bold hover:underline mt-1">Copier</button>
                         </div>
-                    </div>
-                    <div className="flex justify-between p-3">
-                        <span className="text-gray-500">Code BIC/SWIFT</span>
-                        <span className="font-bold text-gray-900 dark:text-white">ECOBTGTG</span>
                     </div>
                 </div>
               </div>
@@ -209,59 +216,34 @@ const Payment: React.FC = () => {
           <div className="lg:col-span-5 flex flex-col gap-6">
             <div className="bg-white dark:bg-[#1e293b] p-6 rounded-2xl border border-gray-200 dark:border-gray-700 shadow-lg sticky top-24">
               <h3 className="text-xl font-bold mb-6 text-gray-900 dark:text-white">Récapitulatif</h3>
-              
               <div className="flex gap-4 mb-6">
                   <div className="size-16 rounded-lg bg-gray-200 bg-cover bg-center" style={{backgroundImage: `url("${displayProperty.image}")`}}></div>
                   <div>
                       <h4 className="font-bold text-gray-900 dark:text-white">{displayProperty.title}</h4>
-                      <p className="text-sm text-gray-500">
-                        {checkinParam && checkoutParam 
-                            ? `${new Date(checkinParam).toLocaleDateString()} - ${new Date(checkoutParam).toLocaleDateString()}` 
-                            : `${diffDays} jours`}
-                      </p>
+                      <p className="text-sm text-gray-500">{diffDays} jours</p>
                   </div>
               </div>
-
               <div className="space-y-3 mb-6">
                   <div className="flex justify-between text-sm">
                     <span className="text-gray-600 dark:text-gray-300">Sous-total</span>
                     <span className="font-bold text-gray-900 dark:text-white">{basePrice.toLocaleString()} FCFA</span>
                   </div>
                   <div className="flex justify-between text-sm">
-                    <span className="text-gray-600 dark:text-gray-300">Frais de service ({serviceFeeRate}%)</span>
+                    <span className="text-gray-600 dark:text-gray-300">Frais de service (15%)</span>
                     <span className="font-bold text-gray-900 dark:text-white">{serviceFee.toLocaleString()} FCFA</span>
                   </div>
               </div>
-
               <div className="flex justify-between items-center mb-6 pt-4 border-t border-gray-100 dark:border-gray-700">
                 <span className="text-lg font-bold text-gray-900 dark:text-white">Total à payer</span>
                 <span className="text-2xl font-black text-primary">{totalAmount.toLocaleString()} F</span>
               </div>
-
               <button 
                 onClick={handlePayment}
                 disabled={isProcessing}
-                className={`w-full py-4 bg-primary hover:bg-[#d65a1f] text-white text-center font-bold rounded-xl shadow-lg shadow-primary/20 transition-all flex items-center justify-center gap-2 ${isProcessing ? 'opacity-70 cursor-not-allowed' : 'active:scale-95'}`}
+                className="w-full py-4 bg-primary hover:bg-[#d65a1f] text-white text-center font-bold rounded-xl shadow-lg shadow-primary/20 transition-all flex items-center justify-center gap-2"
               >
-                {isProcessing ? (
-                    <>
-                        <span className="size-5 border-2 border-white border-t-transparent rounded-full animate-spin"></span>
-                        Traitement...
-                    </>
-                ) : (
-                    <>
-                        <span className="material-symbols-outlined">lock</span>
-                        Payer {totalAmount.toLocaleString()} FCFA
-                    </>
-                )}
+                {isProcessing ? 'Traitement...' : `Payer ${totalAmount.toLocaleString()} FCFA`}
               </button>
-              
-              <div className="mt-4 flex justify-center gap-2 opacity-50 grayscale">
-                  {/* Payment Logos Placeholders */}
-                  <div className="h-6 w-10 bg-gray-300 rounded"></div>
-                  <div className="h-6 w-10 bg-gray-300 rounded"></div>
-                  <div className="h-6 w-10 bg-gray-300 rounded"></div>
-              </div>
             </div>
           </div>
         </div>

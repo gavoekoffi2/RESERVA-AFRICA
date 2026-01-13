@@ -5,14 +5,41 @@ export interface User {
   id: string;
   name: string;
   email: string;
+  password?: string;
   avatar: string;
   role: 'GUEST' | 'HOST' | 'ADMIN' | 'SUPER_ADMIN';
   status?: 'Active' | 'Suspended';
+  verificationStatus?: 'unverified' | 'pending' | 'verified';
+  verificationDoc?: string;
   joinDate?: string;
   permissions?: string[];
   bio?: string;
   location?: string;
   phone?: string;
+}
+
+export interface HostApplication {
+    id: string;
+    userId: string;
+    userName: string;
+    userEmail: string;
+    businessName: string;
+    domain: 'Hébergement' | 'Voiture' | 'Expérience';
+    description: string;
+    status: 'Pending' | 'Approved' | 'Rejected';
+    timestamp: string;
+    phone: string;
+}
+
+export interface VerificationRequest {
+    id: string;
+    userId: string;
+    userName: string;
+    userEmail: string;
+    documentType: string;
+    documentUrl: string;
+    timestamp: string;
+    status: 'Pending' | 'Approved' | 'Rejected';
 }
 
 export interface Booking {
@@ -23,7 +50,7 @@ export interface Booking {
   image: string;
   price: string;
   status: 'Confirmé' | 'En attente' | 'Annulé' | 'Terminé';
-  type: 'stay' | 'car' | 'attraction';
+  type: 'stay' | 'car' | 'experience';
   hostName?: string;
   hostId?: string;
   guestName?: string;
@@ -93,7 +120,7 @@ export interface SystemNotification {
   message: string;
   date: string;
   read: boolean;
-  type: 'booking' | 'system' | 'promotion';
+  type: 'booking' | 'system' | 'promotion' | 'verification';
   targetUserId?: string;
 }
 
@@ -124,7 +151,15 @@ interface AppContextType {
   login: (userData: User) => void;
   logout: () => void;
   updateUser: (data: Partial<User>) => void;
-  upgradeToHost: () => void;
+  registerUser: (userData: User) => void;
+  submitVerification: (docType: string, docUrl: string) => void;
+  verificationRequests: VerificationRequest[];
+  approveVerification: (id: string) => void;
+  rejectVerification: (id: string, reason: string) => void;
+  submitHostApplication: (app: Omit<HostApplication, 'id' | 'userId' | 'userName' | 'userEmail' | 'status' | 'timestamp'>) => void;
+  hostApplications: HostApplication[];
+  approveHostApplication: (id: string) => void;
+  rejectHostApplication: (id: string, reason: string) => void;
   toggleUserRole: (email: string) => void;
   favorites: Set<number>;
   toggleFavorite: (id: number) => void;
@@ -178,21 +213,25 @@ const parseMockDate = (dateStr: string, isEnd: boolean = false): Date => {
 };
 
 const MOCK_USERS: User[] = [
-  { id: 'u1', name: 'Jean Dupont', email: 'jean.dupont@email.com', role: 'GUEST', avatar: 'https://images.unsplash.com/photo-1531123897727-8f129e1688ce?auto=format&fit=crop&w=200&h=200', status: 'Active', joinDate: '12 Oct 2023', bio: 'Voyageur passionné.', location: 'Paris, France' },
-  { id: 'u2', name: 'Kodjo Mensah', email: 'kodjo@host.com', role: 'HOST', avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=300&h=200', status: 'Active', joinDate: '05 Jan 2022', bio: 'Hôte expérimenté à Lomé.', location: 'Lomé, Togo' },
-  { id: 'a1', name: 'Super Admin', email: 'admin@reserve.africa', role: 'SUPER_ADMIN', avatar: 'https://ui-avatars.com/api/?name=Super+Admin&background=000&color=fff', status: 'Active', joinDate: '01 Jan 2023', permissions: [] },
+  { id: 'u1', name: 'Jean Dupont', email: 'jean.dupont@email.com', password: 'password123', role: 'GUEST', avatar: 'https://images.unsplash.com/photo-1531123897727-8f129e1688ce?auto=format&fit=crop&w=200&h=200', status: 'Active', verificationStatus: 'verified', joinDate: '12 Oct 2023', bio: 'Voyageur passionné.', location: 'Paris, France' },
+  { id: 'u2', name: 'Kodjo Mensah', email: 'kodjo@host.com', password: 'password123', role: 'HOST', avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=300&h=200', status: 'Active', verificationStatus: 'verified', joinDate: '05 Jan 2022', bio: 'Hôte expérimenté à Lomé.', location: 'Lomé, Togo' },
+  { id: 'a1', name: 'Super Admin', email: 'admin@reserve.africa', password: 'admin123', role: 'SUPER_ADMIN', avatar: 'https://ui-avatars.com/api/?name=Super+Admin&background=000&color=fff', status: 'Active', verificationStatus: 'verified', joinDate: '01 Jan 2023', permissions: [] },
 ];
 
 const MOCK_PROPERTIES: Property[] = [
-  { id: 1, title: 'Villa Prestige Océan', location: 'Lomé, Baguida', type: 'Hébergement', category: 'Villa', price: '250 000 F', rawPrice: 250000, image: 'https://images.unsplash.com/photo-1613490493576-2f045a168583?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80', status: 'En ligne', owner: 'Kodjo Mensah', ownerId: 'u2', features: ['Piscine', 'Wifi', 'Vue Mer', 'Climatisation'], capacity: 8, rating: 5.0, reviews: 1, coordinates: { lat: 6.13, lng: 1.25 }, blockedDates: [] },
-  { id: 4, title: 'Penthouse Abidjan', location: 'Abidjan, CI', type: 'Hébergement', category: 'Appartement', price: '150 000 F', rawPrice: 150000, image: 'https://images.unsplash.com/photo-1512917774080-9991f1c4c750?auto=format&fit=crop&w=600&q=80', status: 'En attente', owner: 'Kodjo Mensah', ownerId: 'u2', features: ['Wifi', 'Climatisation', 'Cuisine'], capacity: 4, rating: 4.7, reviews: 0, coordinates: { lat: 5.35, lng: -4.0 }, blockedDates: [] },
+  { id: 1, title: 'Villa Emeraude Prestige', location: 'Lomé, Baguida', type: 'Hébergement', category: 'Villa', price: '250 000 F', rawPrice: 250000, image: 'https://images.unsplash.com/photo-1613977257363-707ba9348227?auto=format&fit=crop&w=1200&q=80', status: 'En ligne', owner: 'Kodjo Mensah', ownerId: 'u2', features: ['Infinity Pool', 'Staff inclus', 'Vue Mer'], capacity: 10, rating: 5.0, reviews: 42, coordinates: { lat: 6.1366, lng: 1.2222 }, blockedDates: [] },
+  { id: 2, title: 'Résidence Oasis Plateau', location: 'Abidjan, Cocody', type: 'Hébergement', category: 'Villa', price: '185 000 F', rawPrice: 185000, image: 'https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&fit=crop&w=1200&q=80', status: 'En ligne', owner: 'Amadou Kone', ownerId: 'u3', features: ['Smart Home', 'Salle de Sport', 'Sécurité 24/7'], capacity: 8, rating: 4.8, reviews: 28, coordinates: { lat: 5.3484, lng: -4.0305 }, blockedDates: [] },
+  { id: 3, title: 'Palais du Sable', location: 'Assinie, Côte d\'Ivoire', type: 'Hébergement', category: 'Villa', price: '350 000 F', rawPrice: 350000, image: 'https://images.unsplash.com/photo-1512918766671-ed6a07be3573?auto=format&fit=crop&w=1200&q=80', status: 'En ligne', owner: 'Fatou Diagne', ownerId: 'g2', features: ['Accès Plage', 'Chef Privé'], capacity: 12, rating: 4.9, reviews: 15, coordinates: { lat: 5.1500, lng: -3.2833 }, blockedDates: [] },
+  { id: 4, title: 'Toyota Prado 4x4', location: 'Lomé, Togo', type: 'Voiture', category: 'SUV', price: '75 000 F', rawPrice: 75000, image: 'https://images.unsplash.com/photo-1594731826724-4061a9415f3e?auto=format&fit=crop&w=1200&q=80', status: 'En ligne', owner: 'Kodjo Mensah', ownerId: 'u2', features: ['Climatisation', 'Chauffeur possible'], capacity: 7, rating: 4.8, reviews: 12, coordinates: { lat: 6.1256, lng: 1.2254 }, blockedDates: [] },
+  { id: 5, title: 'Toyota Corolla Sedan', location: 'Dakar, Sénégal', type: 'Voiture', category: 'Berline', price: '35 000 F', rawPrice: 35000, image: 'https://images.unsplash.com/photo-1621007947382-bb3c3994e3fb?auto=format&fit=crop&w=1200&q=80', status: 'En ligne', owner: 'Senegal Mobility', ownerId: 'u5', features: ['Économique', 'Propre'], capacity: 5, rating: 4.7, reviews: 10, coordinates: { lat: 14.7167, lng: -17.4677 }, blockedDates: [] },
+  { id: 6, title: 'Circuit Culturel Ouidah', location: 'Ouidah, Bénin', type: 'Expérience', category: 'Culture', price: '45 000 F', rawPrice: 45000, image: 'https://images.unsplash.com/photo-1547471080-7cc2caa01a7e?auto=format&fit=crop&w=1200&q=80', status: 'En ligne', owner: 'Benin Wild', ownerId: 'u4', features: ['Guide Expert', 'Déjeuner inclus'], capacity: 10, rating: 5.0, reviews: 25, coordinates: { lat: 6.3631, lng: 2.0853 }, blockedDates: [] },
 ];
 
 const DEFAULT_ASSETS: Record<string, SiteAsset> = {
     'site_logo': { id: 'site_logo', name: 'Logo de la Plateforme (URL)', url: '', category: 'logo' },
-    'hero_bg': { id: 'hero_bg', name: 'Image de Fond Accueil', url: 'https://images.unsplash.com/photo-1613977257363-707ba9348227?ixlib=rb-4.0.3&auto=format&fit=crop&w=2600&q=80', category: 'image' },
-    'host_cta_bg': { id: 'host_cta_bg', name: 'Bannière Devenir Hôte', url: 'https://images.unsplash.com/photo-1543343132-73a7d2e06d91?auto=format&fit=crop&w=1200&q=80', category: 'image' },
-    'become_host_hero': { id: 'become_host_hero', name: 'Page Devenir Hôte Hero', url: 'https://images.unsplash.com/photo-1556912173-3db4d6be6816?auto=format&fit=crop&w=2000&q=80', category: 'image' },
+    'hero_bg': { id: 'hero_bg', name: 'Image Hero House', url: 'https://images.unsplash.com/photo-1613977257363-707ba9348227?auto=format&fit=crop&w=1200&q=80', category: 'image' },
+    'host_cta_bg': { id: 'host_cta_bg', name: 'Bannière Devenir Hôte', url: 'https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&fit=crop&w=1200&q=80', category: 'image' },
+    'become_host_hero': { id: 'become_host_hero', name: 'Page Devenir Hôte Hero', url: 'https://images.unsplash.com/photo-1582268611958-ebfd161ef9cf?auto=format&fit=crop&w=2000&q=80', category: 'image' },
 };
 
 export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
@@ -201,14 +240,13 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
       return saved ? JSON.parse(saved) : null;
   });
 
-  const [favorites, setFavorites] = useState<Set<number>>(() => {
-      const saved = localStorage.getItem('reserve_favorites');
-      return saved ? new Set(JSON.parse(saved)) : new Set();
-  });
+  const [favorites, setFavorites] = useState<Set<number>>(new Set());
 
   const [bookings, setBookings] = useState<Booking[]>(() => {
       const saved = localStorage.getItem('reserve_bookings');
-      return saved ? JSON.parse(saved) : [];
+      return saved ? JSON.parse(saved) : [
+          { id: 'RES-8812', title: 'Villa Emeraude Prestige', location: 'Lomé', dates: '12-15 Oct', image: 'https://images.unsplash.com/photo-1613977257363-707ba9348227', price: '750 000 F', status: 'Confirmé', type: 'stay', guestId: 'u1', guestName: 'Jean Dupont', guestAvatar: 'https://images.unsplash.com/photo-1531123897727-8f129e1688ce?auto=format&fit=crop&w=100&q=80' }
+      ];
   });
 
   const [properties, setProperties] = useState<Property[]>(() => {
@@ -233,7 +271,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
 
   const [systemSettings, setSystemSettings] = useState<SystemSettings>(() => {
       const saved = localStorage.getItem('reserve_settings');
-      return saved ? JSON.parse(saved) : { commissionRate: 15, serviceFeeRate: 5, maintenanceMode: false };
+      return saved ? JSON.parse(saved) : { commissionRate: 15, serviceFeeRate: 15, maintenanceMode: false };
   });
 
   const [siteAssets, setSiteAssets] = useState<Record<string, SiteAsset>>(() => {
@@ -246,6 +284,16 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
       return saved ? JSON.parse(saved) : MOCK_USERS;
   });
 
+  const [hostApplications, setHostApplications] = useState<HostApplication[]>(() => {
+      const saved = localStorage.getItem('reserve_host_apps');
+      return saved ? JSON.parse(saved) : [];
+  });
+
+  const [verificationRequests, setVerificationRequests] = useState<VerificationRequest[]>(() => {
+      const saved = localStorage.getItem('reserve_verif_reqs');
+      return saved ? JSON.parse(saved) : [];
+  });
+
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [systemNotifications, setSystemNotifications] = useState<SystemNotification[]>(() => {
       const saved = localStorage.getItem('reserve_sys_notifs');
@@ -256,9 +304,20 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
   const unreadNotificationCount = systemNotifications.filter(n => (!n.targetUserId || n.targetUserId === user?.id) && !n.read).length;
 
   useEffect(() => {
-      if (user) localStorage.setItem('reserve_user', JSON.stringify(user));
-      else localStorage.removeItem('reserve_user');
+      if (user) {
+          localStorage.setItem('reserve_user', JSON.stringify(user));
+          const savedFavs = localStorage.getItem(`reserve_favs_${user.id}`);
+          if (savedFavs) setFavorites(new Set(JSON.parse(savedFavs)));
+          else setFavorites(new Set());
+      } else {
+          localStorage.removeItem('reserve_user');
+          setFavorites(new Set());
+      }
   }, [user]);
+
+  useEffect(() => {
+      if (user) localStorage.setItem(`reserve_favs_${user.id}`, JSON.stringify(Array.from(favorites)));
+  }, [favorites, user]);
 
   useEffect(() => { localStorage.setItem('reserve_bookings', JSON.stringify(bookings)); }, [bookings]);
   useEffect(() => { localStorage.setItem('reserve_properties', JSON.stringify(properties)); }, [properties]);
@@ -267,6 +326,8 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
   useEffect(() => { localStorage.setItem('reserve_sys_notifs', JSON.stringify(systemNotifications)); }, [systemNotifications]);
   useEffect(() => { localStorage.setItem('reserve_assets', JSON.stringify(siteAssets)); }, [siteAssets]);
   useEffect(() => { localStorage.setItem('reserve_all_users', JSON.stringify(allUsers)); }, [allUsers]);
+  useEffect(() => { localStorage.setItem('reserve_host_apps', JSON.stringify(hostApplications)); }, [hostApplications]);
+  useEffect(() => { localStorage.setItem('reserve_verif_reqs', JSON.stringify(verificationRequests)); }, [verificationRequests]);
 
   const addNotification = (type: 'success' | 'error' | 'info', message: string) => {
     const id = Date.now().toString();
@@ -277,6 +338,13 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
   const login = (userData: User) => {
     setUser(userData);
     addNotification('success', `Ravi de vous revoir, ${userData.name.split(' ')[0]} !`);
+  };
+
+  const registerUser = (userData: User) => {
+      const newUser = { ...userData, verificationStatus: 'unverified' as const };
+      setAllUsers(prev => [...prev, newUser]);
+      setUser(newUser);
+      addNotification('success', `Bienvenue sur Reserve Africa, ${userData.name.split(' ')[0]} !`);
   };
 
   const logout = () => {
@@ -292,13 +360,96 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     }
   };
 
-  const upgradeToHost = () => {
-      if (user) {
-          const updatedUser: User = { ...user, role: 'HOST' };
-          setUser(updatedUser);
-          setAllUsers(prev => prev.map(u => u.id === user.id ? updatedUser : u));
-          addNotification('success', 'Bienvenue dans la communauté des hôtes !');
-      }
+  const submitVerification = (docType: string, docUrl: string) => {
+      if (!user) return;
+      const newRequest: VerificationRequest = {
+          id: `verif-${Date.now()}`,
+          userId: user.id,
+          userName: user.name,
+          userEmail: user.email,
+          documentType: docType,
+          documentUrl: docUrl,
+          timestamp: new Date().toLocaleDateString('fr-FR'),
+          status: 'Pending'
+      };
+      setVerificationRequests(prev => [newRequest, ...prev]);
+      updateUser({ verificationStatus: 'pending' });
+      addNotification('success', 'Votre demande de vérification est en cours d\'examen.');
+  };
+
+  const approveVerification = (id: string) => {
+      const req = verificationRequests.find(r => r.id === id);
+      if (!req) return;
+      setVerificationRequests(prev => prev.map(r => r.id === id ? { ...r, status: 'Approved' } : r));
+      setAllUsers(prev => prev.map(u => u.id === req.userId ? { ...u, verificationStatus: 'verified' } : u));
+      if (user?.id === req.userId) setUser({ ...user, verificationStatus: 'verified' });
+      
+      const newNotif: SystemNotification = { 
+          id: `notif-${Date.now()}`, 
+          title: 'Identité Vérifiée !', 
+          message: 'Votre identité a été validée par nos services. Vous pouvez désormais publier des annonces.', 
+          date: 'À l\'instant', 
+          read: false, 
+          type: 'verification', 
+          targetUserId: req.userId 
+      };
+      setSystemNotifications(prev => [newNotif, ...prev]);
+      addNotification('success', `Vérification de ${req.userName} approuvée.`);
+  };
+
+  const rejectVerification = (id: string, reason: string) => {
+      const req = verificationRequests.find(r => r.id === id);
+      if (!req) return;
+      setVerificationRequests(prev => prev.map(r => r.id === id ? { ...r, status: 'Rejected' } : r));
+      setAllUsers(prev => prev.map(u => u.id === req.userId ? { ...u, verificationStatus: 'unverified' } : u));
+      if (user?.id === req.userId) setUser({ ...user, verificationStatus: 'unverified' });
+      
+      const newNotif: SystemNotification = { 
+          id: `notif-${Date.now()}`, 
+          title: 'Vérification refusée', 
+          message: `Votre document n'a pas pu être validé. Motif : ${reason}`, 
+          date: 'À l\'instant', 
+          read: false, 
+          type: 'verification', 
+          targetUserId: req.userId 
+      };
+      setSystemNotifications(prev => [newNotif, ...prev]);
+      addNotification('info', `Vérification de ${req.userName} rejetée.`);
+  };
+
+  const submitHostApplication = (app: Omit<HostApplication, 'id' | 'userId' | 'userName' | 'userEmail' | 'status' | 'timestamp'>) => {
+      if (!user) return;
+      const newApp: HostApplication = {
+          ...app,
+          id: `app-${Date.now()}`,
+          userId: user.id,
+          userName: user.name,
+          userEmail: user.email,
+          status: 'Pending',
+          timestamp: new Date().toLocaleDateString('fr-FR')
+      };
+      setHostApplications(prev => [newApp, ...prev]);
+      addNotification('success', 'Votre demande a été envoyée pour examen.');
+  };
+
+  const approveHostApplication = (id: string) => {
+      const app = hostApplications.find(a => a.id === id);
+      if (!app) return;
+      setHostApplications(prev => prev.map(a => a.id === id ? { ...a, status: 'Approved' } : a));
+      setAllUsers(prev => prev.map(u => u.id === app.userId ? { ...u, role: 'HOST' } : u));
+      if (user?.id === app.userId) setUser({ ...user, role: 'HOST' });
+      const newNotif: SystemNotification = { id: `notif-${Date.now()}`, title: 'Bienvenue Contributeur !', message: `Votre demande pour devenir hôte (${app.domain}) a été approuvée.`, date: 'À l\'instant', read: false, type: 'system', targetUserId: app.userId };
+      setSystemNotifications(prev => [newNotif, ...prev]);
+      addNotification('success', `Candidature de ${app.userName} approuvée.`);
+  };
+
+  const rejectHostApplication = (id: string, reason: string) => {
+      const app = hostApplications.find(a => a.id === id);
+      if (!app) return;
+      setHostApplications(prev => prev.map(a => a.id === id ? { ...a, status: 'Rejected' } : a));
+      const newNotif: SystemNotification = { id: `notif-${Date.now()}`, title: 'Mise à jour candidature', message: `Votre demande n'a pas pu être approuvée. Motif : ${reason}`, date: 'À l\'instant', read: false, type: 'system', targetUserId: app.userId };
+      setSystemNotifications(prev => [newNotif, ...prev]);
+      addNotification('info', `Candidature de ${app.userName} rejetée.`);
   };
 
   const toggleUserRole = (email: string) => {
@@ -316,12 +467,8 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
   const toggleFavorite = (id: number) => {
     setFavorites(prev => {
       const newFav = new Set(prev);
-      if (newFav.has(id)) {
-          newFav.delete(id);
-      } else {
-          newFav.add(id);
-          addNotification('success', 'Ajouté aux favoris');
-      }
+      if (newFav.has(id)) newFav.delete(id);
+      else { newFav.add(id); addNotification('success', 'Ajouté aux favoris'); }
       return newFav;
     });
   };
@@ -332,10 +479,8 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     const hostName = property?.owner || 'Reserve Host';
     const newBooking = { ...booking, hostName, hostId, guestId: user?.id };
     setBookings(prev => [newBooking, ...prev]);
-    
     const newNotif: SystemNotification = { id: `sn-${Date.now()}`, title: 'Réservation confirmée', message: `Votre réservation pour ${booking.title} est validée.`, date: 'À l\'instant', read: false, type: 'booking', targetUserId: user?.id };
     const hostNotif: SystemNotification = { id: `hn-${Date.now()}`, title: 'Nouveau voyageur !', message: `${user?.name} a réservé ${booking.title}.`, date: 'À l\'instant', read: false, type: 'booking', targetUserId: hostId };
-    
     setSystemNotifications(prev => [newNotif, hostNotif, ...prev]);
   };
 
@@ -349,11 +494,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
               curr.setDate(curr.getDate() + 1);
           }
       }
-      return !bookings.some(b => 
-          b.propertyId === propertyId && (b.status === 'Confirmé' || b.status === 'En attente') &&
-          (start < (b.checkOutDate ? new Date(b.checkOutDate) : parseMockDate(b.dates, true)) && 
-           end > (b.checkInDate ? new Date(b.checkInDate) : parseMockDate(b.dates, false)))
-      );
+      return !bookings.some(b => b.propertyId === propertyId && (b.status === 'Confirmé' || b.status === 'En attente') && (start < (b.checkOutDate ? new Date(b.checkOutDate) : parseMockDate(b.dates, true)) && end > (b.checkInDate ? new Date(b.checkInDate) : parseMockDate(b.dates, false))));
   };
 
   const addReview = (propertyId: number, rating: number, comment: string, bookingId: string) => {
@@ -390,7 +531,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
 
   const addProperty = (newProperty: Property) => {
     setProperties(prev => [newProperty, ...prev]);
-    addNotification('success', 'Annonce soumise avec succès.');
+    // addNotification is handled in the component for complex flows
   };
 
   const updateProperty = (updatedProperty: Property) => {
@@ -446,7 +587,9 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
 
   return (
     <AppContext.Provider value={{ 
-      user, login, logout, updateUser, upgradeToHost, toggleUserRole, favorites, toggleFavorite, 
+      user, login, logout, updateUser, registerUser, 
+      submitVerification, verificationRequests, approveVerification, rejectVerification,
+      submitHostApplication, hostApplications, approveHostApplication, rejectHostApplication, toggleUserRole, favorites, toggleFavorite, 
       bookings, addBooking, updateBookingStatus, checkAvailability,
       properties, allProperties: properties, addProperty, updateProperty, deleteProperty, updatePropertyStatus, togglePropertyBlock,
       reviews, addReview, messages, sendMessage, markMessagesRead, unreadMessageCount, allUsers, toggleUserStatus: (e) => setAllUsers(prev => prev.map(u => u.email === e ? { ...u, status: u.status === 'Active' ? 'Suspended' : 'Active' } : u)), createAdmin: (a) => setAllUsers(prev => [a, ...prev]),

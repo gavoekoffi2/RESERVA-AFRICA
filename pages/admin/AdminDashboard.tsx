@@ -3,9 +3,10 @@ import { Link } from 'react-router-dom';
 import { useApp } from '../../context/AppContext';
 
 const AdminDashboard: React.FC = () => {
-  const { allProperties, allUsers, bookings } = useApp();
+  const { allProperties, allUsers, bookings, hostApplications } = useApp();
 
   const pendingProperties = allProperties.filter(p => p.status === 'En attente').length;
+  const pendingApps = hostApplications.filter(a => a.status === 'Pending').length;
   const activeUsers = allUsers.filter(u => u.status === 'Active').length;
   const totalRevenue = "12.5M FCFA";
 
@@ -32,7 +33,7 @@ const AdminDashboard: React.FC = () => {
               </div>
               <span className="text-sm font-bold text-gray-500">Volume d'affaires</span>
            </div>
-           <h2 className="text-3xl font-black text-gray-900 dark:text-white">{totalRevenue}</h2>
+           <h2 className="text-3xl font-black text-gray-900 dark:text-white">12.5M</h2>
            <p className="text-xs text-green-500 font-bold mt-1">+15% ce mois</p>
         </div>
 
@@ -44,30 +45,30 @@ const AdminDashboard: React.FC = () => {
               <span className="text-sm font-bold text-gray-500">Utilisateurs Actifs</span>
            </div>
            <h2 className="text-3xl font-black text-gray-900 dark:text-white">{activeUsers}</h2>
-           <p className="text-xs text-blue-500 font-bold mt-1">Total: {allUsers.length} comptes</p>
+           <p className="text-xs text-blue-500 font-bold mt-1">Total: {allUsers.length}</p>
         </div>
 
-        <div className="bg-white dark:bg-[#1e293b] p-6 rounded-[24px] border border-gray-100 dark:border-gray-800 shadow-sm relative overflow-hidden">
+        <Link to="/admin/requests" className="bg-white dark:bg-[#1e293b] p-6 rounded-[24px] border border-gray-100 dark:border-gray-800 shadow-sm relative overflow-hidden group hover:border-primary transition-colors cursor-pointer">
            <div className="flex items-center gap-3 mb-2">
               <div className="p-2 bg-purple-100 text-purple-600 rounded-xl">
-                 <span className="material-symbols-outlined text-xl">book_online</span>
+                 <span className="material-symbols-outlined text-xl">person_search</span>
               </div>
-              <span className="text-sm font-bold text-gray-500">Réservations</span>
+              <span className="text-sm font-bold text-gray-500">Candidatures Hôtes</span>
            </div>
-           <h2 className="text-3xl font-black text-gray-900 dark:text-white">{bookings.length}</h2>
-           <p className="text-xs text-purple-500 font-bold mt-1">En cours</p>
-        </div>
+           <h2 className="text-3xl font-black text-gray-900 dark:text-white">{pendingApps}</h2>
+           <p className="text-xs text-purple-500 font-bold mt-1">Nouveaux dossiers</p>
+           {pendingApps > 0 && <span className="absolute top-4 right-4 bg-primary w-3 h-3 rounded-full animate-ping"></span>}
+        </Link>
 
         <Link to="/admin/properties" className="bg-white dark:bg-[#1e293b] p-6 rounded-[24px] border border-gray-100 dark:border-gray-800 shadow-sm relative overflow-hidden group hover:border-primary transition-colors cursor-pointer">
            <div className="flex items-center gap-3 mb-2">
               <div className="p-2 bg-orange-100 text-orange-600 rounded-xl">
                  <span className="material-symbols-outlined text-xl">rule</span>
               </div>
-              <span className="text-sm font-bold text-gray-500">Modération</span>
+              <span className="text-sm font-bold text-gray-500">Modération Annonces</span>
            </div>
            <h2 className="text-3xl font-black text-gray-900 dark:text-white">{pendingProperties}</h2>
-           <p className="text-xs text-orange-500 font-bold mt-1">Annonces en attente</p>
-           <span className="absolute top-4 right-4 bg-red-500 w-3 h-3 rounded-full animate-ping" style={{ display: pendingProperties > 0 ? 'block' : 'none' }}></span>
+           <p className="text-xs text-orange-500 font-bold mt-1">En attente</p>
         </Link>
       </div>
 
@@ -83,7 +84,7 @@ const AdminDashboard: React.FC = () => {
                             <span className="material-symbols-outlined text-xl">shopping_cart</span>
                         </div>
                         <div className="flex-1">
-                            <p className="font-bold text-gray-900 dark:text-white">Nouvelle réservation <span className="font-normal text-gray-500">#{b.id}</span></p>
+                            <p className="font-bold text-gray-900 dark:text-white">Réservation <span className="font-normal text-gray-500">#{b.id}</span></p>
                             <p className="text-xs text-gray-500">{b.title} • {b.price}</p>
                         </div>
                         <span className="text-xs font-bold text-gray-400">Il y a 2h</span>
@@ -95,14 +96,14 @@ const AdminDashboard: React.FC = () => {
          <div className="bg-white dark:bg-[#1e293b] p-8 rounded-[32px] border border-gray-100 dark:border-gray-800 shadow-sm">
             <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-6">Actions Rapides</h3>
             <div className="space-y-3">
-                <button className="w-full flex items-center gap-3 p-4 rounded-xl bg-gray-50 dark:bg-gray-800 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors text-left group">
-                    <span className="material-symbols-outlined text-gray-500 group-hover:text-primary">person_add</span>
-                    <span className="font-bold text-gray-700 dark:text-gray-200">Ajouter un admin</span>
-                </button>
-                <button className="w-full flex items-center gap-3 p-4 rounded-xl bg-gray-50 dark:bg-gray-800 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors text-left group">
-                    <span className="material-symbols-outlined text-gray-500 group-hover:text-primary">settings</span>
-                    <span className="font-bold text-gray-700 dark:text-gray-200">Paramètres système</span>
-                </button>
+                <Link to="/admin/requests" className="w-full flex items-center gap-3 p-4 rounded-xl bg-gray-50 dark:bg-gray-800 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors text-left group">
+                    <span className="material-symbols-outlined text-gray-500 group-hover:text-primary">how_to_reg</span>
+                    <span className="font-bold text-gray-700 dark:text-gray-200">Review Applications</span>
+                </Link>
+                <Link to="/admin/users" className="w-full flex items-center gap-3 p-4 rounded-xl bg-gray-50 dark:bg-gray-800 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors text-left group">
+                    <span className="material-symbols-outlined text-gray-500 group-hover:text-primary">manage_accounts</span>
+                    <span className="font-bold text-gray-700 dark:text-gray-200">Gérer Utilisateurs</span>
+                </Link>
             </div>
          </div>
       </div>
