@@ -299,11 +299,14 @@ const App: React.FC = () => {
               <Route path="/support/trust" element={<TrustSafety />} />
               <Route path="/legal/terms" element={<Terms />} />
               <Route path="/legal/privacy" element={<Privacy />} />
+              
+              {/* Setup Flow accessible by GUEST who want to become HOST */}
+              <Route path="/host/setup" element={<RequireAuth><AddProperty /></RequireAuth>} />
   
               <Route path="/host" element={<HostLayout />}>
                   <Route path="dashboard" element={<Dashboard />} />
                   <Route path="properties" element={<Properties />} />
-                  <Route path="properties/add" element={<AddProperty />} />
+                  <Route path="properties/add" element={<Navigate to="/host/setup" replace />} />
                   <Route path="properties/edit/:id" element={<EditProperty />} />
                   <Route path="calendar" element={<Calendar />} />
                   <Route path="messages" element={<Messages />} />

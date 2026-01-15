@@ -5,7 +5,7 @@ import { useApp } from '../../context/AppContext';
 const StayDetails: React.FC = () => {
   const { id } = useParams();
   const navigate = useNavigate();
-  const { allProperties, reviews, user, sendMessage, addNotification } = useApp();
+  const { allProperties, reviews, user, sendMessage, addNotification, allUsers } = useApp();
   const property = allProperties.find(p => p.id === Number(id));
   
   const [showGallery, setShowGallery] = useState(false);
@@ -13,6 +13,7 @@ const StayDetails: React.FC = () => {
 
   if (!property) return <div className="p-20 text-center">Hébergement non trouvé</div>;
 
+  const host = allUsers.find(u => u.id === property.ownerId);
   const propertyReviews = reviews.filter(r => r.propertyId === property.id);
   const images = [
     property.image, 
@@ -32,8 +33,8 @@ const StayDetails: React.FC = () => {
           addNotification('error', 'Vous ne pouvez pas vous contacter vous-même.');
           return;
       }
-      sendMessage(user.id, property.ownerId || 'u2', "Bonjour, je suis intéressé par votre annonce : " + property.title);
-      navigate('/account/messages');
+      // Redirect with host ID to pre-fill the chat
+      navigate(`/account/messages?contactId=${property.ownerId}`);
   };
 
   return (
@@ -64,6 +65,24 @@ const StayDetails: React.FC = () => {
             <p className="text-lg text-[#9a664c] font-medium flex items-center gap-1"><span className="material-symbols-outlined text-primary">location_on</span> {property.location}</p>
           </div>
 
+          {/* Host Information Section */}
+          <div className="py-6 border-b border-gray-100 dark:border-gray-800">
+             <div className="flex items-center gap-4 mb-6">
+                <div className="w-16 h-16 rounded-full bg-cover bg-center ring-4 ring-primary/10" style={{backgroundImage: `url("${host?.avatar || 'https://i.pravatar.cc/100'}")`}}></div>
+                <div>
+                   <h3 className="text-xl font-black text-gray-900 dark:text-white">Hôte : {property.owner}</h3>
+                   <p className="text-sm text-gray-500 font-medium">Membre depuis 2023 • Identité vérifiée</p>
+                </div>
+             </div>
+             <button 
+                onClick={handleContactHost}
+                className="inline-flex items-center gap-2 px-6 py-3 rounded-xl border-2 border-gray-100 dark:border-gray-700 font-black text-sm uppercase tracking-widest hover:bg-gray-50 dark:hover:bg-gray-800 transition-all active:scale-95 shadow-sm"
+             >
+                <span className="material-symbols-outlined text-[20px]">chat</span>
+                Contacter l'hôte
+             </button>
+          </div>
+
           <div>
              <h3 className="text-xl font-bold mb-4">Emplacement</h3>
              <div className="w-full h-64 bg-gray-100 dark:bg-gray-800 rounded-3xl overflow-hidden relative border border-gray-100 dark:border-gray-800 shadow-inner">
@@ -81,7 +100,7 @@ const StayDetails: React.FC = () => {
 
           <div><h3 className="text-xl font-bold mb-4">À propos</h3><p className="text-gray-600 dark:text-gray-300 leading-relaxed text-lg">{property.description || "Profitez d'un séjour exceptionnel dans ce cadre unique."}</p></div>
 
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-2 gap-4 pb-8">
               {property.features?.map((f, i) => <div key={i} className="flex items-center gap-3"><span className="material-symbols-outlined text-green-500">check_circle</span><span className="font-medium">{f}</span></div>)}
           </div>
         </div>

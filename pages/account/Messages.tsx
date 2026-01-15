@@ -1,9 +1,12 @@
 import React, { useState, useMemo, useEffect } from 'react';
-import { Link, useLocation } from 'react-router-dom';
+import { Link, useLocation, useSearchParams } from 'react-router-dom';
 import { useApp } from '../../context/AppContext';
 
 const GuestMessages: React.FC = () => {
   const location = useLocation();
+  const [searchParams] = useSearchParams();
+  const contactIdParam = searchParams.get('contactId');
+  
   const isActive = (path: string) => location.pathname === path ? 'bg-gray-100 dark:bg-gray-800 font-semibold text-primary' : 'hover:bg-gray-50 dark:hover:bg-gray-800 text-gray-600 dark:text-gray-400';
   const { user, messages, sendMessage, allUsers, markMessagesRead } = useApp();
   const [activeChatId, setActiveChatId] = useState<string | null>(null);
@@ -12,6 +15,19 @@ const GuestMessages: React.FC = () => {
   const conversations = useMemo(() => {
       if (!user) return [];
       const conversationMap = new Map();
+      
+      // Also ensure the contactIdParam user is in the list even if no messages yet
+      if (contactIdParam && contactIdParam !== user.id) {
+          const targetContact = allUsers.find(u => u.id === contactIdParam);
+          if (targetContact) {
+              conversationMap.set(contactIdParam, { 
+                userId: contactIdParam, 
+                lastMessage: { text: "Nouvelle discussion", timestamp: new Date().toISOString() }, 
+                unreadCount: 0 
+              });
+          }
+      }
+
       messages.forEach(msg => {
           if (msg.senderId === user.id || msg.receiverId === user.id) {
               const otherUserId = msg.senderId === user.id ? msg.receiverId : msg.senderId;
@@ -19,20 +35,35 @@ const GuestMessages: React.FC = () => {
                   conversationMap.set(otherUserId, { userId: otherUserId, lastMessage: msg, unreadCount: 0 });
               } else {
                   const conv = conversationMap.get(otherUserId);
-                  if (new Date(msg.timestamp) > new Date(conv.lastMessage.timestamp)) conv.lastMessage = msg;
+                  if (msg.timestamp && conv.lastMessage.timestamp && new Date(msg.timestamp) > new Date(conv.lastMessage.timestamp)) {
+                      conv.lastMessage = msg;
+                  }
               }
-              if (msg.receiverId === user.id && !msg.read) conversationMap.get(otherUserId).unreadCount++;
+              if (msg.receiverId === user.id && !msg.read) {
+                  const conv = conversationMap.get(otherUserId);
+                  if (conv) conv.unreadCount++;
+              }
           }
       });
       return Array.from(conversationMap.values()).map(c => ({ ...c, contact: allUsers.find(u => u.id === c.userId) }))
-          .sort((a, b) => new Date(b.lastMessage.timestamp).getTime() - new Date(a.lastMessage.timestamp).getTime());
-  }, [messages, user, allUsers]);
+          .sort((a, b) => {
+              if (!a.lastMessage.timestamp) return 1;
+              if (!b.lastMessage.timestamp) return -1;
+              return new Date(b.lastMessage.timestamp).getTime() - new Date(a.lastMessage.timestamp).getTime();
+          });
+  }, [messages, user, allUsers, contactIdParam]);
+
+  useEffect(() => {
+      if (contactIdParam) {
+          setActiveChatId(contactIdParam);
+      } else if (!activeChatId && conversations.length > 0) {
+          setActiveChatId(conversations[0].userId);
+      }
+  }, [contactIdParam, conversations, activeChatId]);
 
   useEffect(() => {
       if (activeChatId) markMessagesRead(activeChatId);
-  }, [activeChatId, messages.length]); // eslint-disable-line
-
-  if (!activeChatId && conversations.length > 0) setActiveChatId(conversations[0].userId);
+  }, [activeChatId, messages.length, markMessagesRead]);
 
   const activeMessages = useMemo(() => {
       if (!activeChatId || !user) return [];
@@ -75,7 +106,7 @@ const GuestMessages: React.FC = () => {
                         <div key={conv.userId} onClick={() => setActiveChatId(conv.userId)} className={`p-5 border-b border-gray-50 dark:border-gray-800/50 cursor-pointer transition-all relative ${activeChatId === conv.userId ? 'bg-white dark:bg-[#1e293b] shadow-inner' : 'hover:bg-white/50 dark:hover:bg-white/5'}`}>
                             <div className="flex justify-between mb-1">
                                 <h4 className={`font-bold text-sm ${conv.unreadCount > 0 ? 'text-black dark:text-white' : 'text-gray-600 dark:text-gray-400'}`}>{conv.contact?.name || 'Utilisateur'}</h4>
-                                <span className="text-[10px] font-bold text-gray-400">{new Date(conv.lastMessage.timestamp).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</span>
+                                <span className="text-[10px] font-bold text-gray-400">{conv.lastMessage.timestamp ? new Date(conv.lastMessage.timestamp).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) : ''}</span>
                             </div>
                             <p className={`text-xs truncate ${conv.unreadCount > 0 ? 'font-black text-black dark:text-white' : 'text-gray-500'}`}>{conv.lastMessage.text}</p>
                             {conv.unreadCount > 0 && <div className="absolute right-4 bottom-5 size-2.5 bg-primary rounded-full ring-4 ring-white dark:ring-gray-800"></div>}
@@ -93,6 +124,12 @@ const GuestMessages: React.FC = () => {
                             </div>
                         </div>
                         <div className="flex-1 p-8 overflow-y-auto space-y-6 no-scrollbar bg-gray-50/30 dark:bg-transparent">
+                            {activeMessages.length === 0 && (
+                                <div className="flex flex-col items-center justify-center h-full text-gray-400 gap-2 opacity-50">
+                                    <span className="material-symbols-outlined text-4xl">waving_hand</span>
+                                    <p className="font-bold">Dites bonjour à {activeContact.name} !</p>
+                                </div>
+                            )}
                             {activeMessages.map(msg => (
                                 <div key={msg.id} className={`flex gap-3 ${msg.senderId === user?.id ? 'flex-row-reverse' : ''}`}>
                                     <div className={`p-4 rounded-3xl shadow-sm max-w-[80%] ${msg.senderId === user?.id ? 'bg-primary text-white rounded-tr-none' : 'bg-white dark:bg-[#1e293b] dark:text-white rounded-tl-none border border-gray-100 dark:border-gray-800'}`}>
