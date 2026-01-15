@@ -22,6 +22,7 @@ import StayDetails from './pages/guest/StayDetails';
 import AirportTaxi from './pages/guest/AirportTaxi';
 import Landing from './pages/guest/Landing';
 import BecomeHost from './pages/guest/BecomeHost';
+import ApplyHost from './pages/guest/ApplyHost';
 import Profile from './pages/account/Profile';
 import Bookings from './pages/account/Bookings';
 import Favorites from './pages/account/Favorites';
@@ -283,6 +284,7 @@ const App: React.FC = () => {
               <Route path="/taxi" element={<AirportTaxi />} />
               
               <Route path="/become-a-host" element={<BecomeHost />} />
+              <Route path="/become-a-host/apply" element={<RequireAuth><ApplyHost /></RequireAuth>} />
               <Route path="/booking/details" element={<BookingDetails />} />
               <Route path="/booking/payment" element={<Payment />} />
               <Route path="/booking/confirmation" element={<Confirmation />} />
@@ -300,7 +302,6 @@ const App: React.FC = () => {
               <Route path="/legal/terms" element={<Terms />} />
               <Route path="/legal/privacy" element={<Privacy />} />
               
-              {/* Setup Flow accessible by GUEST who want to become HOST */}
               <Route path="/host/setup" element={<RequireAuth><AddProperty /></RequireAuth>} />
   
               <Route path="/host" element={<HostLayout />}>
