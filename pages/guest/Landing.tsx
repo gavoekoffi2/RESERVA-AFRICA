@@ -24,6 +24,28 @@ const AirbnbCalendar: React.FC<{
   const getDaysInMonth = (year: number, month: number) => new Date(year, month + 1, 0).getDate();
   const getFirstDayOfMonth = (year: number, month: number) => new Date(year, month, 1).getDay();
 
+  const handleDateClick = (dateStr: string) => {
+    if (!startDate || (startDate && endDate)) {
+      // Cas 1: Rien n'est sélectionné ou une plage complète existe déjà -> on commence une nouvelle sélection
+      onSelect(dateStr, '');
+    } else {
+      // Cas 2: Une date de début existe mais pas de fin
+      if (dateStr < startDate) {
+        // Si on clique avant le début, on réinitialise le début
+        onSelect(dateStr, '');
+      } else if (dateStr === startDate) {
+        // Si on clique sur le même jour, on annule
+        onSelect('', '');
+      } else {
+        // Sélection de la plage complète
+        onSelect(startDate, dateStr);
+      }
+    }
+  };
+
+  const years = Array.from({ length: 5 }, (_, i) => new Date().getFullYear() + i);
+  const months = ["Janvier", "Février", "Mars", "Avril", "Mai", "Juin", "Juillet", "Août", "Septembre", "Octobre", "Novembre", "Décembre"];
+
   const renderMonth = (offset: number) => {
     const displayDate = new Date(baseDate.getFullYear(), baseDate.getMonth() + offset, 1);
     const year = displayDate.getFullYear();
@@ -33,13 +55,11 @@ const AirbnbCalendar: React.FC<{
     
     const blanks = Array(startDay).fill(null);
     const days = Array.from({ length: daysInMonth }, (_, i) => i + 1);
-    
-    const monthNames = ["Janvier", "Février", "Mars", "Avril", "Mai", "Juin", "Juillet", "Août", "Septembre", "Octobre", "Novembre", "Décembre"];
 
     return (
       <div className="w-full md:w-[320px] p-2">
-        <div className="text-center font-black mb-4 text-gray-800 dark:text-white capitalize tracking-tight">
-          {monthNames[month]} {year}
+        <div className="text-center font-black mb-4 text-gray-800 dark:text-white capitalize tracking-tight flex justify-center items-center">
+          <span className="text-sm">{months[month]} {year}</span>
         </div>
         <div className="grid grid-cols-7 gap-1 mb-2 text-[10px] font-black text-gray-400 text-center uppercase tracking-widest">
           {['Di', 'Lu', 'Ma', 'Me', 'Je', 'Ve', 'Sa'].map(d => <div key={d}>{d}</div>)}
@@ -66,19 +86,11 @@ const AirbnbCalendar: React.FC<{
                 disabled={isPast}
                 onClick={(e) => {
                   e.stopPropagation();
-                  if (!startDate || (startDate && endDate)) {
-                    onSelect(dateStr, '');
-                  } else {
-                    if (dateStr < startDate) {
-                       onSelect(dateStr, ''); 
-                    } else {
-                       onSelect(startDate, dateStr);
-                    }
-                  }
+                  handleDateClick(dateStr);
                 }}
                 className={`
                   h-10 w-full flex items-center justify-center text-sm font-bold transition-all relative
-                  ${isPast ? 'text-gray-200 cursor-not-allowed' : 'hover:bg-gray-100 dark:hover:bg-gray-700 rounded-full'}
+                  ${isPast ? 'text-gray-200 cursor-not-allowed opacity-30' : 'hover:bg-gray-100 dark:hover:bg-gray-700 rounded-full'}
                   ${isSelected ? 'bg-primary text-white rounded-full z-10 shadow-lg scale-105' : ''}
                   ${isRange ? 'bg-primary/10 text-primary rounded-none' : ''}
                   ${isStart && endDate ? 'rounded-r-none' : ''}
@@ -97,39 +109,57 @@ const AirbnbCalendar: React.FC<{
   return (
     <>
       {/* Mobile Backdrop Overlay */}
-      <div className="md:hidden fixed inset-0 bg-black/60 backdrop-blur-sm z-[100]" onClick={onClose}></div>
+      <div className="md:hidden fixed inset-0 bg-black/70 backdrop-blur-md z-[100]" onClick={onClose}></div>
       
-      <div className="fixed md:absolute inset-x-4 md:inset-x-auto top-20 md:top-full md:left-1/2 md:-translate-x-1/2 bg-white dark:bg-[#1e293b] rounded-[32px] md:rounded-[40px] shadow-[0_30px_90px_rgba(0,0,0,0.4)] p-6 md:p-8 animate-reveal border border-gray-100 dark:border-gray-700 z-[101] md:mt-4 min-w-0 md:min-w-[750px]">
-         <div className="flex justify-between items-center mb-6 md:hidden">
-            <h3 className="font-black text-lg">Choisir vos dates</h3>
-            <button onClick={onClose} className="p-2 bg-gray-100 dark:bg-gray-800 rounded-full"><span className="material-symbols-outlined text-sm">close</span></button>
+      <div className="fixed md:absolute inset-x-2 md:inset-x-auto top-10 md:top-full md:left-1/2 md:-translate-x-1/2 bg-white dark:bg-[#1e293b] rounded-[32px] md:rounded-[40px] shadow-[0_40px_100px_rgba(0,0,0,0.5)] p-4 md:p-8 animate-reveal border border-gray-100 dark:border-gray-700 z-[101] md:mt-4 min-w-0 md:min-w-[780px]">
+         
+         {/* Navigation Header */}
+         <div className="flex flex-col gap-4 mb-6">
+            <div className="flex justify-between items-center">
+               <div className="flex gap-2">
+                  <select 
+                    value={baseDate.getFullYear()} 
+                    onChange={(e) => setBaseDate(new Date(parseInt(e.target.value), baseDate.getMonth(), 1))}
+                    className="bg-gray-50 dark:bg-gray-800 border-none rounded-xl px-3 py-1.5 text-xs font-black outline-none focus:ring-2 focus:ring-primary/20"
+                  >
+                    {years.map(y => <option key={y} value={y}>{y}</option>)}
+                  </select>
+                  <select 
+                    value={baseDate.getMonth()} 
+                    onChange={(e) => setBaseDate(new Date(baseDate.getFullYear(), parseInt(e.target.value), 1))}
+                    className="bg-gray-50 dark:bg-gray-800 border-none rounded-xl px-3 py-1.5 text-xs font-black outline-none focus:ring-2 focus:ring-primary/20"
+                  >
+                    {months.map((m, i) => <option key={i} value={i}>{m}</option>)}
+                  </select>
+               </div>
+               <div className="flex gap-1">
+                  <button onClick={(e) => { e.stopPropagation(); setBaseDate(new Date(baseDate.getFullYear(), baseDate.getMonth() - 1, 1)); }} className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-full transition-all active:scale-90 border border-gray-100 dark:border-gray-600"><span className="material-symbols-outlined text-sm block">chevron_left</span></button>
+                  <button onClick={(e) => { e.stopPropagation(); setBaseDate(new Date(baseDate.getFullYear(), baseDate.getMonth() + 1, 1)); }} className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-full transition-all active:scale-90 border border-gray-100 dark:border-gray-600"><span className="material-symbols-outlined text-sm block">chevron_right</span></button>
+               </div>
+               <button onClick={onClose} className="p-2 bg-gray-100 dark:bg-gray-800 rounded-full md:hidden"><span className="material-symbols-outlined text-sm">close</span></button>
+            </div>
          </div>
 
-         <div className="flex flex-col md:flex-row gap-8 justify-center relative max-h-[60vh] md:max-h-none overflow-y-auto md:overflow-visible no-scrollbar">
-            <button 
-               onClick={(e) => { e.stopPropagation(); setBaseDate(new Date(baseDate.getFullYear(), baseDate.getMonth() - 1, 1)); }} 
-               className="absolute left-0 top-1/2 -translate-y-1/2 p-3 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-full hidden md:block z-10 transition-all active:scale-95"
-            >
-               <span className="material-symbols-outlined text-sm">chevron_left</span>
-            </button>
-            
+         <div className="flex flex-col md:flex-row gap-4 md:gap-12 justify-center max-h-[60vh] md:max-h-none overflow-y-auto no-scrollbar px-2">
             {renderMonth(0)}
             <div className="hidden md:block w-px bg-gray-100 dark:bg-gray-700 my-4"></div>
-            <div className="block md:block">
+            <div className="block">
                {renderMonth(1)}
             </div>
-
-            <button 
-               onClick={(e) => { e.stopPropagation(); setBaseDate(new Date(baseDate.getFullYear(), baseDate.getMonth() + 1, 1)); }} 
-               className="absolute right-0 top-1/2 -translate-y-1/2 p-3 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-full hidden md:block z-10 transition-all active:scale-95"
-            >
-               <span className="material-symbols-outlined text-sm">chevron_right</span>
-            </button>
          </div>
 
-         <div className="mt-8 flex justify-between items-center md:hidden pt-4 border-t border-gray-100 dark:border-gray-700">
-             <button onClick={() => onSelect('','')} className="text-xs font-black uppercase underline">Effacer</button>
-             <button onClick={onClose} className="bg-black text-white px-8 py-3 rounded-xl font-black text-xs uppercase tracking-widest">Appliquer</button>
+         <div className="mt-8 flex justify-between items-center pt-5 border-t border-gray-100 dark:border-gray-700">
+             <div className="flex flex-col">
+                <span className="text-[10px] font-black uppercase text-gray-400 tracking-widest">Sélection</span>
+                <span className="text-xs font-black text-gray-900 dark:text-white">
+                  {startDate ? new Date(startDate).toLocaleDateString('fr-FR', {day:'numeric', month:'short'}) : '...'}
+                  {endDate ? ` — ${new Date(endDate).toLocaleDateString('fr-FR', {day:'numeric', month:'short'})}` : ' — ...'}
+                </span>
+             </div>
+             <div className="flex gap-4 items-center">
+                <button onClick={(e) => { e.stopPropagation(); onSelect('',''); }} className="text-xs font-black uppercase underline hover:text-primary transition-colors">Tout effacer</button>
+                <button onClick={onClose} className="bg-black dark:bg-white text-white dark:text-black px-10 py-3.5 rounded-2xl font-black text-[10px] uppercase tracking-widest hover:opacity-80 transition-all shadow-xl">Confirmer</button>
+             </div>
          </div>
       </div>
     </>
@@ -214,6 +244,7 @@ const Landing: React.FC<LandingProps> = ({ detectedLocation }) => {
         if (activeTab === 'experiences') path = '/search/experiences';
         if (activeTab === 'taxi') path = '/taxi';
         navigate(`${path}?${params.toString()}`);
+        setIsSearching(false);
     }, 800);
   };
 
@@ -222,14 +253,22 @@ const Landing: React.FC<LandingProps> = ({ detectedLocation }) => {
     : MOCK_DESTINATIONS.slice(0, 6);
 
   const popularProperties = useMemo(() => {
-    return [...allProperties].filter(p => p.status === 'En ligne').sort((a,b) => b.rating - a.rating).slice(0, 6);
+    return [...allProperties].filter(p => p.status === 'En ligne').sort((a,b) => (b.rating || 0) - (a.rating || 0)).slice(0, 6);
   }, [allProperties]);
+
+  const formatDateRange = () => {
+    if (!dates.start) return 'Dates ?';
+    const start = new Date(dates.start).toLocaleDateString('fr-FR', {day:'numeric', month:'short'});
+    if (!dates.end) return `${start} - ...`;
+    const end = new Date(dates.end).toLocaleDateString('fr-FR', {day:'numeric', month:'short'});
+    return `${start} - ${end}`;
+  };
 
   return (
     <div className="flex flex-col min-h-screen bg-white dark:bg-[#0a0f18] font-display overflow-x-hidden">
       
       {/* Hero Section */}
-      <div className="relative min-h-[600px] lg:h-[95vh] w-full flex flex-col pt-16 px-4 lg:px-10 bg-[#0a0f18] overflow-hidden">
+      <div className="relative min-h-[650px] lg:h-[95vh] w-full flex flex-col pt-16 px-4 lg:px-10 bg-[#0a0f18] overflow-hidden">
         
         {/* CORNER IMAGE */}
         <div className="absolute top-0 right-0 w-full lg:w-[68%] h-full z-0 pointer-events-none select-none overflow-hidden">
@@ -266,49 +305,49 @@ const Landing: React.FC<LandingProps> = ({ detectedLocation }) => {
             ))}
           </div>
 
-          {/* Search Bar Container - COMPACTED FOR MOBILE */}
+          {/* Search Bar Container - COMPACTED & HORIZONTAL */}
           <div ref={searchContainerRef} className="w-full max-w-[1020px] relative z-[60] animate-reveal">
-             <div className={`bg-white/95 dark:bg-[#1a202c]/95 backdrop-blur-3xl rounded-full flex flex-row relative shadow-[0_20px_60px_rgba(0,0,0,0.4)] md:shadow-[0_40px_120px_rgba(0,0,0,0.6)] border border-white/20 transition-all duration-500 md:overflow-visible ${activeField ? 'ring-4 md:ring-10 ring-primary/10' : ''}`}>
+             <div className={`bg-white/95 dark:bg-[#1a202c]/95 backdrop-blur-3xl rounded-full flex flex-row items-center relative shadow-[0_20px_60px_rgba(0,0,0,0.4)] md:shadow-[0_40px_120px_rgba(0,0,0,0.6)] border border-white/20 transition-all duration-500 pr-2 md:pr-3 ${activeField ? 'ring-4 md:ring-10 ring-primary/10' : ''}`}>
                 
                 {/* Field: Destination */}
                 <div 
-                   className={`flex-[1.5] relative px-4 md:pl-10 md:pr-2 py-3 md:py-5 rounded-full cursor-pointer transition-all ${activeField === 'location' ? 'bg-white dark:bg-[#2d3748] shadow-lg md:shadow-2xl z-20' : 'hover:bg-black/5'}`}
+                   className={`flex-[1.8] relative px-3 md:pl-10 md:pr-4 py-3 md:py-5 rounded-full cursor-pointer transition-all ${activeField === 'location' ? 'bg-white dark:bg-[#2d3748] shadow-lg md:shadow-2xl z-20' : 'hover:bg-black/5'}`}
                    onClick={() => setActiveField('location')}
                 >
                    <label className="hidden md:block text-[8px] font-black text-gray-400 uppercase tracking-[0.3em] mb-1">Destination</label>
-                   <div className="flex items-center gap-2 md:block">
-                      <span className="material-symbols-outlined text-gray-400 text-lg md:hidden">location_on</span>
+                   <div className="flex items-center gap-1.5 md:block">
+                      <span className="material-symbols-outlined text-gray-400 text-base md:hidden">location_on</span>
                       <input 
                           type="text"
                           readOnly={window.innerWidth < 768}
                           value={destination}
                           onChange={(e) => setDestination(e.target.value)}
                           placeholder="Où ?"
-                          className="w-full bg-transparent border-none outline-none text-gray-900 dark:text-white font-black placeholder:text-gray-400 truncate text-xs md:text-base leading-none"
+                          className="w-full bg-transparent border-none outline-none text-gray-900 dark:text-white font-black placeholder:text-gray-400 truncate text-[11px] md:text-base leading-none"
                       />
                    </div>
                    {activeField === 'location' && (
-                     <div className="fixed md:absolute top-24 md:top-full left-4 right-4 md:left-0 md:right-auto md:mt-4 md:w-[380px] bg-white dark:bg-[#1e293b] rounded-[32px] md:rounded-[40px] shadow-2xl p-6 z-[101] animate-reveal border border-gray-100 dark:border-gray-700">
+                     <div className="fixed md:absolute top-24 md:top-full left-4 right-4 md:left-0 md:right-auto md:mt-4 md:w-[380px] bg-white dark:bg-[#1e293b] rounded-[32px] md:rounded-[40px] shadow-2xl p-6 z-[101] animate-reveal border border-gray-100 dark:border-gray-700 max-w-[90vw]">
                         <div className="flex justify-between items-center mb-4 md:hidden">
-                            <h3 className="font-black">Destination</h3>
+                            <h3 className="font-black text-sm">Destination</h3>
                             <button onClick={(e) => {e.stopPropagation(); setActiveField(null);}}><span className="material-symbols-outlined">close</span></button>
                         </div>
                         <input 
-                            className="w-full p-4 mb-4 bg-gray-50 dark:bg-gray-800 rounded-2xl md:hidden font-bold outline-none border border-gray-100" 
+                            className="w-full p-4 mb-4 bg-gray-50 dark:bg-gray-800 rounded-2xl md:hidden font-bold outline-none border border-gray-100 dark:border-gray-700" 
                             placeholder="Rechercher..." 
                             value={destination}
                             onChange={(e) => setDestination(e.target.value)}
                             autoFocus
                         />
                         <h4 className="text-[10px] font-black text-gray-400 mb-2 uppercase tracking-[0.3em] px-2">Suggestions</h4>
-                        <div className="space-y-1 overflow-y-auto max-h-[40vh] md:max-h-none">
+                        <div className="space-y-1 overflow-y-auto max-h-[40vh] md:max-h-none no-scrollbar">
                           {filteredDestinations.map((city, idx) => (
                             <div 
                               key={idx}
                               onClick={(e) => { e.stopPropagation(); setDestination(city); setActiveField('dates'); }}
                               className="flex items-center gap-4 p-3 hover:bg-gray-50 dark:hover:bg-gray-800 rounded-2xl cursor-pointer transition-all"
                             >
-                              <div className="bg-primary/10 text-primary p-2 rounded-xl md:rounded-2xl"><span className="material-symbols-outlined text-base md:text-[18px] font-bold">explore</span></div>
+                              <div className="bg-primary/10 text-primary p-2 rounded-xl md:rounded-2xl shrink-0"><span className="material-symbols-outlined text-base md:text-[18px] font-bold block">explore</span></div>
                               <div><span className="font-black text-gray-800 dark:text-white block text-xs md:text-sm">{city}</span></div>
                             </div>
                           ))}
@@ -317,18 +356,18 @@ const Landing: React.FC<LandingProps> = ({ detectedLocation }) => {
                    )}
                 </div>
 
-                <div className="w-px bg-gray-100 dark:bg-gray-700 my-3 md:my-4"></div>
+                <div className="w-px bg-gray-100 dark:bg-gray-700 h-6 md:h-10 shrink-0"></div>
 
                 {/* Field: Dates */}
                 <div 
-                   className={`flex-1 relative px-3 md:px-6 py-3 md:py-5 rounded-full cursor-pointer transition-all ${activeField === 'dates' ? 'bg-white dark:bg-[#2d3748] shadow-lg md:shadow-2xl z-20' : 'hover:bg-black/5'}`}
+                   className={`flex-[1.5] relative px-2 md:px-8 py-3 md:py-5 rounded-full cursor-pointer transition-all ${activeField === 'dates' ? 'bg-white dark:bg-[#2d3748] shadow-lg md:shadow-2xl z-20' : 'hover:bg-black/5'}`}
                    onClick={() => setActiveField('dates')}
                 >
-                   <label className="hidden md:block text-[8px] font-black text-gray-400 uppercase tracking-[0.3em] mb-1">Dates</label>
-                   <div className="flex items-center gap-2 md:block">
-                      <span className="material-symbols-outlined text-gray-400 text-lg md:hidden">calendar_today</span>
+                   <label className="hidden md:block text-[8px] font-black text-gray-400 uppercase tracking-[0.3em] mb-1">Dates du séjour</label>
+                   <div className="flex items-center gap-1.5 md:block">
+                      <span className="material-symbols-outlined text-gray-400 text-base md:hidden">calendar_today</span>
                       <div className={`font-black truncate text-[10px] md:text-sm tracking-tight ${dates.start ? 'text-gray-900 dark:text-white' : 'text-gray-400'}`}>
-                          {dates.start ? `${new Date(dates.start).toLocaleDateString('fr-FR', {day:'numeric', month:'short'})}` : 'Quand ?'}
+                          {formatDateRange()}
                       </div>
                    </div>
                    {activeField === 'dates' && (
@@ -341,31 +380,31 @@ const Landing: React.FC<LandingProps> = ({ detectedLocation }) => {
                    )}
                 </div>
 
-                <div className="w-px bg-gray-100 dark:bg-gray-700 my-3 md:my-4"></div>
+                <div className="w-px bg-gray-100 dark:bg-gray-700 h-6 md:h-10 shrink-0"></div>
 
                 {/* Field: Travelers */}
                 <div 
-                   className={`flex-[0.8] md:flex-1 relative px-3 md:pl-6 md:pr-4 py-3 md:py-5 flex items-center rounded-full cursor-pointer transition-all ${activeField === 'travelers' ? 'bg-white dark:bg-[#2d3748] shadow-lg md:shadow-2xl z-20' : 'hover:bg-black/5'}`}
+                   className={`flex-[1.2] relative px-2 md:pl-8 md:pr-4 py-3 md:py-5 flex items-center rounded-full cursor-pointer transition-all ${activeField === 'travelers' ? 'bg-white dark:bg-[#2d3748] shadow-lg md:shadow-2xl z-20' : 'hover:bg-black/5'}`}
                    onClick={() => setActiveField('travelers')}
                 >
-                   <div className="flex items-center gap-2 md:block">
-                      <span className="material-symbols-outlined text-gray-400 text-lg md:hidden">group</span>
+                   <div className="flex items-center gap-1.5 md:block flex-1 min-w-0">
+                      <span className="material-symbols-outlined text-gray-400 text-base md:hidden">group</span>
                       <div className="hidden md:block">
                          <label className="block text-[8px] font-black text-gray-400 uppercase tracking-[0.3em] mb-1">Qui ?</label>
                          <div className={`font-black truncate text-sm tracking-tight ${travelers.adults + travelers.children > 0 ? 'text-gray-900 dark:text-white' : 'text-gray-400'}`}>
                            {travelers.adults + travelers.children} pers.
                          </div>
                       </div>
-                      <span className={`md:hidden font-black text-[10px] ${travelers.adults + travelers.children > 0 ? 'text-gray-900 dark:text-white' : 'text-gray-400'}`}>
-                        {travelers.adults + travelers.children}
+                      <span className={`md:hidden font-black text-[10px] truncate ${travelers.adults + travelers.children > 0 ? 'text-gray-900 dark:text-white' : 'text-gray-400'}`}>
+                        {travelers.adults + travelers.children} p.
                       </span>
                    </div>
 
-                   {/* Travelers Dropdown - ALIGNMENT FIXED */}
+                   {/* Travelers Dropdown */}
                    {activeField === 'travelers' && (
                      <>
                         <div className="md:hidden fixed inset-0 bg-black/60 backdrop-blur-sm z-[100]" onClick={(e) => {e.stopPropagation(); setActiveField(null);}}></div>
-                        <div className="fixed md:absolute top-24 md:top-full left-4 right-4 md:left-auto md:right-0 md:mt-4 md:w-[320px] bg-white dark:bg-[#1e293b] rounded-[32px] md:rounded-[40px] shadow-2xl p-6 md:p-8 z-[101] animate-reveal border border-gray-100 dark:border-gray-700">
+                        <div className="fixed md:absolute top-24 md:top-full left-4 right-4 md:left-auto md:right-0 md:mt-4 md:w-[320px] bg-white dark:bg-[#1e293b] rounded-[32px] md:rounded-[40px] shadow-2xl p-6 md:p-8 z-[101] animate-reveal border border-gray-100 dark:border-gray-700 max-w-[90vw]">
                              <h3 className="font-black text-lg mb-6 md:hidden">Voyageurs</h3>
                              <div className="space-y-6">
                                 {[
@@ -380,12 +419,12 @@ const Landing: React.FC<LandingProps> = ({ detectedLocation }) => {
                                         <div className="flex items-center gap-4">
                                             <button 
                                                 onClick={(e) => { e.stopPropagation(); setTravelers(prev => ({...prev, [cat.id]: Math.max(0, (prev as any)[cat.id] - 1)}))}}
-                                                className="size-7 md:size-8 rounded-full border border-gray-200 flex items-center justify-center font-black hover:border-black transition-colors"
+                                                className="size-8 rounded-full border border-gray-200 dark:border-gray-600 flex items-center justify-center font-black hover:border-black transition-colors"
                                             >-</button>
                                             <span className="font-black w-4 text-center">{(travelers as any)[cat.id]}</span>
                                             <button 
                                                 onClick={(e) => { e.stopPropagation(); setTravelers(prev => ({...prev, [cat.id]: (prev as any)[cat.id] + 1}))}}
-                                                className="size-7 md:size-8 rounded-full border border-gray-200 flex items-center justify-center font-black hover:border-black transition-colors"
+                                                className="size-8 rounded-full border border-gray-200 dark:border-gray-600 flex items-center justify-center font-black hover:border-black transition-colors"
                                             >+</button>
                                         </div>
                                     </div>
@@ -395,22 +434,23 @@ const Landing: React.FC<LandingProps> = ({ detectedLocation }) => {
                         </div>
                      </>
                    )}
-
-                   {/* SEARCH BUTTON - INTEGRATED CIRCLE ON ALL SCREENS */}
-                   <button 
-                      onClick={(e) => { e.stopPropagation(); handleSearch(); }}
-                      disabled={isSearching}
-                      className={`ml-auto size-10 md:size-12 bg-primary hover:bg-primary-dark text-white rounded-full shadow-lg flex items-center justify-center transition-all active:scale-95 group ${isSearching ? 'opacity-70' : ''}`}
-                   >
-                      {isSearching ? <span className="size-4 md:size-5 border-2 md:border-3 border-white border-t-transparent rounded-full animate-spin"></span> : <span className="material-symbols-outlined text-base md:text-xl font-black group-hover:rotate-12 transition-transform">search</span>}
-                   </button>
                 </div>
+
+                {/* SEARCH BUTTON - UNIVERSAL VISIBILITY */}
+                <button 
+                    onClick={(e) => { e.stopPropagation(); handleSearch(); }}
+                    disabled={isSearching}
+                    className={`shrink-0 size-10 md:size-12 bg-primary hover:bg-primary-dark text-white rounded-full shadow-lg flex items-center justify-center transition-all active:scale-90 group relative z-[70] ${isSearching ? 'opacity-70' : ''}`}
+                    aria-label="Rechercher"
+                >
+                    {isSearching ? <span className="size-4 md:size-5 border-2 border-white border-t-transparent rounded-full animate-spin"></span> : <span className="material-symbols-outlined text-base md:text-xl font-black group-hover:rotate-12 transition-transform block">search</span>}
+                </button>
              </div>
           </div>
 
           {/* Headline Text - ADJUSTED FOR COMPACTNESS */}
           <div className="mt-8 lg:mt-16 text-center lg:text-left animate-reveal relative z-10 px-4 w-full max-w-[850px]" style={{animationDelay: '0.2s'}}>
-             <h1 className="text-[clamp(1.6rem,6vw,4.8rem)] font-black text-white mb-4 md:mb-6 tracking-tighter leading-[1.1] drop-shadow-lg">
+             <h1 className="text-[clamp(1.8rem,6vw,4.8rem)] font-black text-white mb-4 md:mb-6 tracking-tighter leading-[1.1] drop-shadow-lg">
                 Simplifiez <br className="hidden md:block"/>
                 <div className="min-h-[1.2em] block lg:inline-block">
                     <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary via-yellow-400 to-orange-400 italic">
