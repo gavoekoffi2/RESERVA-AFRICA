@@ -63,7 +63,7 @@ const Register: React.FC = () => {
         <p className="text-gray-500 font-medium mb-10">Rejoignez la communauté de voyageurs Reseva.</p>
 
         <form onSubmit={handleRegister} className="space-y-6">
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div className="space-y-2">
                 <label className="text-[10px] font-black uppercase tracking-widest text-gray-400 ml-1">Prénom</label>
                 <input 
