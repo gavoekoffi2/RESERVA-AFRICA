@@ -25,7 +25,7 @@ const AdminMedia: React.FC = () => {
        <div className="mb-10 flex justify-between items-end">
           <div>
             <h1 className="text-4xl font-black text-gray-900 dark:text-white tracking-tight">Identité Visuelle & Médias</h1>
-            <p className="text-gray-500 dark:text-gray-400 font-medium text-lg mt-1">Gérez le branding global et les visuels de Reseva Africa.</p>
+            <p className="text-gray-500 dark:text-gray-400 font-medium text-lg mt-1">Gérez le branding global et les visuels de Reserva Africa.</p>
           </div>
           <div className="flex gap-4">
              <div className="bg-blue-50 text-blue-700 px-4 py-2 rounded-xl text-xs font-black uppercase flex items-center gap-2 border border-blue-100">

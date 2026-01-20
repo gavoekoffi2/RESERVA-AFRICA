@@ -42,7 +42,7 @@ const Login: React.FC = () => {
         <div className="size-12 rounded-full bg-primary flex items-center justify-center text-white shadow-lg group-hover:scale-110 transition-transform">
           <span className="material-symbols-outlined text-2xl">travel_explore</span>
         </div>
-        <span className="text-2xl font-black italic text-gray-900 dark:text-white">Reseva <span className="text-primary not-italic">Africa.</span></span>
+        <span className="text-2xl font-black italic text-gray-900 dark:text-white">Reserva <span className="text-primary not-italic">Africa.</span></span>
       </Link>
 
       <div className="w-full max-w-[480px] bg-white dark:bg-[#1a202c] p-8 md:p-12 rounded-[40px] shadow-[0_32px_64px_rgba(0,0,0,0.08)] border border-gray-100 dark:border-gray-800">

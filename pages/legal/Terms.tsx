@@ -15,8 +15,8 @@ const Terms: React.FC = () => {
         <section>
           <h2 className="text-xl font-bold mb-3 text-gray-900 dark:text-white">1. Introduction</h2>
           <p className="text-gray-600 dark:text-gray-300 leading-relaxed">
-            Bienvenue sur Reseva Africa. En utilisant notre plateforme, vous acceptez les présentes conditions générales. 
-            Reseva Africa met en relation des voyageurs avec des hôtes proposant des hébergements, des voitures et des activités.
+            Bienvenue sur Reserva Africa. En utilisant notre plateforme, vous acceptez les présentes conditions générales. 
+            Reserva Africa met en relation des voyageurs avec des hôtes proposant des hébergements, des voitures et des activités.
           </p>
         </section>
 
@@ -39,7 +39,7 @@ const Terms: React.FC = () => {
         <section>
           <h2 className="text-xl font-bold mb-3 text-gray-900 dark:text-white">4. Responsabilités</h2>
           <p className="text-gray-600 dark:text-gray-300 leading-relaxed">
-            Reseva Africa agit en tant qu'intermédiaire. Nous ne sommes pas responsables de la qualité réelle des services fournis par les hôtes, bien que nous fassions de notre mieux pour vérifier les annonces.
+            Reserva Africa agit en tant qu'intermédiaire. Nous ne sommes pas responsables de la qualité réelle des services fournis par les hôtes, bien que nous fassions de notre mieux pour vérifier les annonces.
             Les utilisateurs sont tenus de respecter les lieux et le matériel mis à disposition.
           </p>
         </section>

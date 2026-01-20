@@ -110,7 +110,7 @@ const AddProperty: React.FC = () => {
         return (
           <div className="flex flex-col md:flex-row h-full w-full max-w-[1440px] mx-auto animate-reveal">
             <div className="flex-1 bg-gradient-to-br from-primary to-orange-600 p-12 md:p-24 text-white flex flex-col justify-center">
-              <h1 className="text-5xl md:text-7xl font-black tracking-tighter leading-none mb-8">C'est simple de <br/> devenir hôte <br/> sur Reseva.</h1>
+              <h1 className="text-5xl md:text-7xl font-black tracking-tighter leading-none mb-8">C'est simple de <br/> devenir hôte <br/> sur Reserva.</h1>
               <p className="text-xl font-bold opacity-90 max-w-md">Accompagnez-nous pour créer une annonce exceptionnelle en quelques minutes.</p>
             </div>
             <div className="flex-1 bg-white dark:bg-[#0a0f18] p-12 md:p-24 flex flex-col justify-center items-center">
@@ -317,7 +317,7 @@ const AddProperty: React.FC = () => {
                       <p className="text-[10px] font-black uppercase tracking-[0.2em] mb-1 opacity-60">Gains nets estimés (Hôte)</p>
                       <p className="text-3xl font-black">{(formData.price * 0.85).toLocaleString()} F</p>
                    </div>
-                   <span className="text-[10px] font-black uppercase tracking-widest opacity-50 max-w-[120px] text-right">Après commission Reseva (15%)</span>
+                   <span className="text-[10px] font-black uppercase tracking-widest opacity-50 max-w-[120px] text-right">Après commission Reserva (15%)</span>
                 </div>
             </div>
           </div>
@@ -374,7 +374,7 @@ const AddProperty: React.FC = () => {
             <div className="size-10 rounded-2xl bg-primary flex items-center justify-center text-white shadow-lg rotate-6">
               <span className="material-symbols-outlined text-xl font-black">add_business</span>
             </div>
-            <span className="text-lg font-black italic text-gray-900 dark:text-white hidden sm:block">Reseva <span className="text-primary not-italic">Setup.</span></span>
+            <span className="text-lg font-black italic text-gray-900 dark:text-white hidden sm:block">Reserva <span className="text-primary not-italic">Setup.</span></span>
          </div>
          <button 
            onClick={() => { if (confirm('Quitter sans enregistrer ?')) navigate('/host/dashboard'); }}
@@ -391,7 +391,7 @@ const AddProperty: React.FC = () => {
 
       {/* Navigation Footer */}
       <footer className="h-32 px-6 md:px-24 border-t-2 border-gray-50 dark:border-gray-800 bg-white/95 dark:bg-[#0a0f18]/95 backdrop-blur-xl fixed bottom-0 left-0 right-0 z-[100]">
-          <div className="max-w-[1400px] mx-auto w-full h-full flex justify-between items-center gap-10">
+          <div className="max-w-[1440px] mx-auto w-full h-full flex justify-between items-center gap-10">
               <button 
                 onClick={prevStep} 
                 className={`px-10 py-5 rounded-2xl font-black text-xs uppercase tracking-[0.2em] text-gray-400 hover:text-black dark:hover:text-white transition-all ${step === 0 ? 'opacity-0 pointer-events-none' : ''}`}

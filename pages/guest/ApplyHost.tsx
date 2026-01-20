@@ -84,7 +84,7 @@ const ApplyHost: React.FC = () => {
               </div>
               <h1 className="text-3xl font-black mb-4">Candidature en cours</h1>
               <p className="text-gray-500 max-w-md mb-8 leading-relaxed font-medium">
-                  Nos administrateurs vérifient votre document d'identité. 
+                  Nos administrateurs vérifient votre document d'identité pour Reserva Africa. 
                   Vous recevrez une notification par e-mail dès validation.
               </p>
               <Link to="/" className="px-10 py-4 bg-black text-white rounded-2xl font-black uppercase text-[10px] tracking-widest shadow-xl hover:opacity-80 transition-all">Quitter vers l'accueil</Link>
@@ -108,7 +108,7 @@ const ApplyHost: React.FC = () => {
                {step === 1 && (
                  <div className="animate-reveal">
                     <h1 className="text-4xl font-black text-gray-900 dark:text-white mb-2 tracking-tighter leading-tight">Postulez comme Hôte.</h1>
-                    <p className="text-gray-500 font-medium mb-12 leading-relaxed">Devenez un partenaire privilégié de Reserve Africa.</p>
+                    <p className="text-gray-500 font-medium mb-12 leading-relaxed">Devenez un partenaire privilégié de Reserva Africa.</p>
                     
                     <form className="space-y-8" onSubmit={(e) => { e.preventDefault(); setStep(2); }}>
                         <div className="space-y-3">
@@ -148,7 +148,7 @@ const ApplyHost: React.FC = () => {
                         <span className="material-symbols-outlined text-sm font-black">arrow_back</span> Retour
                     </button>
                     <h2 className="text-4xl font-black text-gray-900 dark:text-white mb-2 tracking-tighter leading-tight">Document Identity.</h2>
-                    <p className="text-gray-500 font-medium mb-12 leading-relaxed">Une validation humaine est obligatoire pour assurer la sécurité de tous.</p>
+                    <p className="text-gray-500 font-medium mb-12 leading-relaxed">Une validation humaine est obligatoire pour assurer la sécurité de tous sur Reserva Africa.</p>
 
                     <form className="space-y-10" onSubmit={handleSubmit}>
                         <div className="space-y-3">
@@ -207,7 +207,7 @@ const ApplyHost: React.FC = () => {
                     </div>
                     <h2 className="text-4xl font-black text-gray-900 dark:text-white mb-4 tracking-tighter">Félicitations !</h2>
                     <p className="text-gray-500 font-medium mb-12 leading-relaxed max-w-sm mx-auto">
-                        Votre demande est transmise. Nos agents vont vérifier votre identité sous <strong>24 heures</strong> pour valider votre statut professionnel.
+                        Votre demande est transmise. Nos agents vont vérifier votre identité sous <strong>24 heures</strong> pour valider votre statut professionnel sur Reserva Africa.
                     </p>
                     <Link to="/" className="inline-block bg-black dark:bg-white text-white dark:text-black px-16 py-5 rounded-2xl font-black uppercase text-[10px] tracking-[0.3em] shadow-2xl hover:opacity-80 transition-all">Retourner au site</Link>
                  </div>

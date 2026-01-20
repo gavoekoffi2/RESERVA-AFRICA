@@ -16,7 +16,7 @@ const AdminDashboard: React.FC = () => {
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4 animate-fade-in-down">
         <div>
           <h1 className="text-3xl md:text-4xl font-black text-gray-900 dark:text-white tracking-tight">Vue d'ensemble</h1>
-          <p className="text-gray-500 dark:text-gray-400 font-medium">Administration Globale de Reserve Africa</p>
+          <p className="text-gray-500 dark:text-gray-400 font-medium">Administration Globale de Reserva Africa</p>
         </div>
         <div className="flex gap-3">
            <button className="bg-white dark:bg-[#1e293b] border border-gray-200 dark:border-gray-700 text-gray-700 dark:text-white px-4 py-2 rounded-xl font-bold hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors flex items-center gap-2">

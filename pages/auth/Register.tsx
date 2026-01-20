@@ -44,7 +44,7 @@ const Register: React.FC = () => {
               verificationStatus: 'unverified'
           });
           setIsLoading(false);
-          addNotification('success', 'Bienvenue chez Reseva Africa !');
+          addNotification('success', 'Bienvenue chez Reserva Africa !');
           navigate(redirectPath || '/');
       }, 1500);
   };
@@ -55,12 +55,12 @@ const Register: React.FC = () => {
         <div className="size-12 rounded-full bg-primary flex items-center justify-center text-white shadow-lg group-hover:scale-110 transition-transform">
           <span className="material-symbols-outlined text-2xl">travel_explore</span>
         </div>
-        <span className="text-2xl font-black italic text-gray-900 dark:text-white">Reseva <span className="text-primary not-italic">Africa.</span></span>
+        <span className="text-2xl font-black italic text-gray-900 dark:text-white">Reserva <span className="text-primary not-italic">Africa.</span></span>
       </Link>
 
       <div className="w-full max-w-[520px] bg-white dark:bg-[#1a202c] p-8 md:p-12 rounded-[40px] shadow-[0_32px_64px_rgba(0,0,0,0.08)] border border-gray-100 dark:border-gray-800 animate-reveal">
         <h1 className="text-3xl font-black tracking-tight text-gray-900 dark:text-white mb-2">Créer un compte</h1>
-        <p className="text-gray-500 font-medium mb-10">Rejoignez la communauté de voyageurs Reseva.</p>
+        <p className="text-gray-500 font-medium mb-10">Rejoignez la communauté de voyageurs Reserva.</p>
 
         <form onSubmit={handleRegister} className="space-y-6">
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">

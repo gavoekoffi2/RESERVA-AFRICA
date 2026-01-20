@@ -28,7 +28,6 @@ const BecomeHost: React.FC = () => {
         <div className="relative z-10 max-w-[1440px] mx-auto px-6 md:px-20 w-full py-20">
           <div className="max-w-3xl text-white animate-reveal">
             <h2 className="text-primary font-black uppercase tracking-[0.4em] mb-4 drop-shadow-lg text-xs md:text-sm">Opportunité Hôte</h2>
-            {/* Reduced font size to avoid overlap */}
             <h1 className="text-4xl md:text-7xl font-black mb-8 leading-[1] tracking-tighter drop-shadow-2xl">
               Faites fructifier <br/><span className="text-primary italic">vos actifs.</span>
             </h1>
@@ -50,7 +49,7 @@ const BecomeHost: React.FC = () => {
         {/* Bottom Trust Badge */}
         <div className="absolute bottom-8 left-6 md:left-20 flex items-center gap-4 text-white/70 animate-reveal" style={{animationDelay: '0.4s'}}>
           <div className="flex -space-x-3">
-            {[1,2,3,4].map(i => <div key={i} className="size-9 rounded-full border-2 border-black bg-gray-500 overflow-hidden shadow-lg"><img src={`https://i.pravatar.cc/100?img=${i+10}`} alt="Hote" /></div>)}
+            {[1,2,3,4].map(i => <div key={i} className="size-9 rounded-full border-2 border-black bg-gray-500 overflow-hidden shadow-lg"><img src={`https://i.pravatar.cc/100?img=${i+10}`} alt="Hôte" /></div>)}
           </div>
           <p className="text-[10px] md:text-xs font-black uppercase tracking-widest">+2,500 hôtes déjà inscrits</p>
         </div>
@@ -60,7 +59,7 @@ const BecomeHost: React.FC = () => {
       <section className="py-24 px-6 max-w-7xl mx-auto">
         <div className="text-center mb-20">
           <h2 className="text-3xl md:text-5xl font-black tracking-tighter mb-4">Le processus de validation</h2>
-          <p className="text-gray-500 font-bold uppercase tracking-widest text-xs">Exigences de sécurité Reserve Africa</p>
+          <p className="text-gray-500 font-bold uppercase tracking-widest text-xs">Exigences de sécurité Reserva Africa</p>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-12">

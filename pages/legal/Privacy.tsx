@@ -9,13 +9,13 @@ const Privacy: React.FC = () => {
       </Link>
       
       <h1 className="text-3xl md:text-4xl font-black mb-2">Politique de Confidentialité</h1>
-      <p className="text-gray-500 mb-8">Votre vie privée est importante pour nous.</p>
+      <p className="text-gray-500 mb-8">Votre vie privée est importante pour nous chez Reserva Africa.</p>
 
       <div className="prose prose-lg dark:prose-invert max-w-none space-y-8">
         <section>
           <h2 className="text-xl font-bold mb-3 text-gray-900 dark:text-white">Collecte des données</h2>
           <p className="text-gray-600 dark:text-gray-300 leading-relaxed">
-            Nous collectons les informations que vous nous fournissez directement (nom, email, téléphone) lorsque vous créez un compte ou effectuez une réservation.
+            Nous collectons les informations que vous nous fournissez directement (nom, email, téléphone) lorsque vous créez un compte ou effectuez une réservation sur Reserva Africa.
             Nous collectons également des données techniques (adresse IP, type d'appareil) pour améliorer votre expérience.
           </p>
         </section>
@@ -35,14 +35,14 @@ const Privacy: React.FC = () => {
         <section>
           <h2 className="text-xl font-bold mb-3 text-gray-900 dark:text-white">Partage des informations</h2>
           <p className="text-gray-600 dark:text-gray-300 leading-relaxed">
-            Nous ne vendons pas vos données personnelles. Nous partageons uniquement les informations nécessaires avec les hôtes (votre nom et dates de séjour) pour permettre la prestation du service.
+            Nous ne vendons pas vos données personnelles. Nous partageons uniquement les informations nécessaires avec les hôtes (votre nom et dates de séjour) pour permettre la prestation du service réservé via Reserva Africa.
           </p>
         </section>
 
         <section>
           <h2 className="text-xl font-bold mb-3 text-gray-900 dark:text-white">Vos droits</h2>
           <p className="text-gray-600 dark:text-gray-300 leading-relaxed">
-            Conformément à la réglementation, vous disposez d'un droit d'accès, de rectification et de suppression de vos données. Vous pouvez exercer ces droits depuis les paramètres de votre compte.
+            Conformément à la réglementation, vous disposez d'un droit d'accès, de rectification et de suppression de vos données. Vous pouvez exercer ces droits depuis les paramètres de votre compte Reserva Africa.
           </p>
         </section>
       </div>

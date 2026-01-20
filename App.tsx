@@ -158,13 +158,13 @@ const Header: React.FC<{ toggleTheme: () => void; isDark: boolean; settings: Loc
              </button>
              <Link to="/" className={`flex items-center gap-3 group ${textClass}`}>
                 {siteAssets?.site_logo?.url ? (
-                    <img src={siteAssets.site_logo.url} className="h-10 w-auto object-contain" alt="Reserve Africa" />
+                    <img src={siteAssets.site_logo.url} className="h-10 w-auto object-contain" alt="Reserva Africa" />
                 ) : (
                     <>
                         <div className={`size-10 rounded-full flex items-center justify-center shadow-lg transition-transform group-hover:scale-110 ${logoBgClass}`}>
                         <span className="material-symbols-outlined text-2xl">travel_explore</span>
                         </div>
-                        <h2 className="hidden md:block text-xl font-black tracking-tight leading-none italic">Reseva <span className="text-primary not-italic">Africa.</span></h2>
+                        <h2 className="hidden md:block text-xl font-black tracking-tight leading-none italic">Reserva <span className="text-primary not-italic">Africa.</span></h2>
                     </>
                 )}
              </Link>
@@ -363,9 +363,9 @@ const Footer: React.FC<{ settings: LocationSettings }> = ({ settings }) => {
           <div>
             <Link to="/" className="inline-block mb-6">
                 {siteAssets?.site_logo?.url ? (
-                    <img src={siteAssets.site_logo.url} className="h-10 w-auto object-contain" alt="Reserve Africa" />
+                    <img src={siteAssets.site_logo.url} className="h-10 w-auto object-contain" alt="Reserva Africa" />
                 ) : (
-                    <h2 className="text-2xl font-black text-gray-900 dark:text-white italic">Reseva <span className="text-primary not-italic">Africa.</span></h2>
+                    <h2 className="text-2xl font-black text-gray-900 dark:text-white italic">Reserva <span className="text-primary not-italic">Africa.</span></h2>
                 )}
             </Link>
             <p className="text-gray-500 text-sm font-medium leading-relaxed">La plateforme numéro 1 pour voyager, loger et se déplacer en toute confiance en Afrique.</p>
@@ -380,7 +380,7 @@ const Footer: React.FC<{ settings: LocationSettings }> = ({ settings }) => {
           <div><h3 className="font-black text-gray-900 dark:text-white mb-6 uppercase tracking-widest text-xs">Légal</h3><ul className="space-y-3 text-sm font-bold text-gray-500"><li><Link to="/legal/terms" className="hover:text-primary transition-colors">Conditions</Link></li><li><Link to="/legal/privacy" className="hover:text-primary transition-colors">Confidentialité</Link></li></ul></div>
         </div>
         <div className="border-t border-gray-100 dark:border-gray-800 py-8 text-center px-4">
-            <p className="text-xs font-black text-gray-400 uppercase tracking-[0.3em]">© 2023 Reseva Africa. Tous droits réservés.</p>
+            <p className="text-xs font-black text-gray-400 uppercase tracking-[0.3em]">© 2023 Reserva Africa. Tous droits réservés.</p>
         </div>
       </footer>
     );
@@ -394,7 +394,7 @@ const HostLayout = () => {
         <div className="flex flex-col lg:flex-row h-screen overflow-hidden bg-[#f7f9fc] dark:bg-[#0f1115] font-display">
             <aside className="w-72 bg-white dark:bg-[#1e293b] border-r border-gray-100 dark:border-gray-800 hidden lg:flex flex-col">
                 <div className="p-8 border-b border-gray-100 dark:border-gray-800">
-                    <h2 className="font-black text-xl text-primary tracking-tighter uppercase">RESEVA HOST</h2>
+                    <h2 className="font-black text-xl text-primary tracking-tighter uppercase">RESERVA HOST</h2>
                 </div>
                 <nav className="p-4 space-y-1 flex-1">
                     {[

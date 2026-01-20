@@ -78,7 +78,7 @@ const GoogleSelector: React.FC = () => {
             <h1 className="text-2xl text-gray-800 font-normal">
                 {view === 'list' ? 'Choisir un compte' : 'Utiliser un autre compte'}
             </h1>
-            <p className="text-sm text-gray-600 mt-1">pour continuer vers Reserve Africa</p>
+            <p className="text-sm text-gray-600 mt-1">pour continuer vers Reserva Africa</p>
         </div>
 
         {view === 'list' ? (
