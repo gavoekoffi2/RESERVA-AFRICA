@@ -38,8 +38,9 @@ const Bookings: React.FC = () => {
   const hasReviewed = (bookingId: string) => reviews.some(r => r.bookingId === bookingId);
 
   const displayedBookings = bookings.filter(b => {
-      // RIGOROUS FIX: Strict check for guest ownership
-      if (b.guestId !== user?.id) return false;
+      // Filtrage strict par ID utilisateur
+      const isOwner = b.guestId === user?.id || b.guestName === user?.name;
+      if (!isOwner) return false;
       
       if (activeTab === 'upcoming') return b.status === 'Confirmé' || b.status === 'En attente';
       if (activeTab === 'completed') return b.status === 'Terminé';

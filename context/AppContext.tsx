@@ -199,7 +199,6 @@ interface AppContextType {
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
 
-// --- UPDATED MOCK DATA WITH FIXED IMAGE LINKS ---
 const MOCK_PROPERTIES: Property[] = [
   { 
     id: 1, 
@@ -218,7 +217,8 @@ const MOCK_PROPERTIES: Property[] = [
     rating: 5.0, 
     reviews: 42, 
     coordinates: { lat: 6.1366, lng: 1.2222 }, 
-    blockedDates: [] 
+    blockedDates: [],
+    description: "Une villa d'exception face à l'Océan Atlantique."
   },
   { 
     id: 2, 
@@ -278,6 +278,25 @@ const MOCK_PROPERTIES: Property[] = [
     blockedDates: [] 
   },
   { 
+    id: 10, 
+    title: 'Taxi Aéroport Standard', 
+    location: 'Dakar, Sénégal', 
+    type: 'Voiture', 
+    category: 'Taxi', 
+    price: '25 000 F', 
+    rawPrice: 25000, 
+    image: 'https://images.unsplash.com/photo-1549317661-bd32c8ce0db2?auto=format&fit=crop&w=300&q=80', 
+    status: 'En ligne', 
+    owner: 'Reserva Fleet', 
+    ownerId: 'u2', 
+    features: ['Standard', '3 Personnes', 'Ponctuel'], 
+    capacity: 3, 
+    rating: 4.9, 
+    reviews: 150, 
+    coordinates: { lat: 14.71, lng: -17.46 }, 
+    blockedDates: [] 
+  },
+  { 
     id: 6, 
     title: 'Safari Parc National Kpendjal', 
     location: 'Mandouri, Togo', 
@@ -301,44 +320,52 @@ const MOCK_PROPERTIES: Property[] = [
 const MOCK_USERS: User[] = [
   { id: 'u1', name: 'Jean Dupont', email: 'jean.dupont@email.com', password: 'password123', role: 'GUEST', avatar: 'https://ui-avatars.com/api/?name=Jean+Dupont&background=ee6c2b&color=fff', status: 'Active', verificationStatus: 'verified', joinDate: '12 Oct 2023' },
   { id: 'u2', name: 'Kodjo Mensah', email: 'kodjo@host.com', password: 'password123', role: 'HOST', avatar: 'https://ui-avatars.com/api/?name=Kodjo+Mensah&background=000&color=fff', status: 'Active', verificationStatus: 'verified', joinDate: '05 Jan 2022' },
-  { id: 'a1', name: 'Super Admin', email: 'admin@reserve.africa', password: 'admin123', role: 'SUPER_ADMIN', avatar: 'https://ui-avatars.com/api/?name=Admin&background=000&color=fff', status: 'Active', verificationStatus: 'verified', joinDate: '01 Jan 2023' },
+  { id: 'a1', name: 'Super Admin', email: 'admin@reserva.africa', password: 'admin123', role: 'SUPER_ADMIN', avatar: 'https://ui-avatars.com/api/?name=Admin&background=000&color=fff', status: 'Active', verificationStatus: 'verified', joinDate: '01 Jan 2023' },
 ];
 
 export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<User | null>(() => {
-      const saved = localStorage.getItem('reserve_user');
+      const saved = localStorage.getItem('reserva_user');
       return saved ? JSON.parse(saved) : null;
   });
 
   const [allUsers, setAllUsers] = useState<User[]>(() => {
-      const saved = localStorage.getItem('reserve_all_users');
+      const saved = localStorage.getItem('reserva_all_users');
       return saved ? JSON.parse(saved) : MOCK_USERS;
   });
 
   const [properties, setProperties] = useState<Property[]>(() => {
-      const saved = localStorage.getItem('reserve_properties');
+      const saved = localStorage.getItem('reserva_properties');
       return saved ? JSON.parse(saved) : MOCK_PROPERTIES;
   });
 
   const [hostApplications, setHostApplications] = useState<HostApplication[]>(() => {
-      const saved = localStorage.getItem('reserve_host_apps');
+      const saved = localStorage.getItem('reserva_host_apps');
       return saved ? JSON.parse(saved) : [];
   });
 
   const [verificationRequests, setVerificationRequests] = useState<VerificationRequest[]>(() => {
-      const saved = localStorage.getItem('reserve_verif_reqs');
+      const saved = localStorage.getItem('reserva_verif_reqs');
       return saved ? JSON.parse(saved) : [];
   });
 
   const [notifications, setNotifications] = useState<Notification[]>([]);
-  const [systemNotifications, setSystemNotifications] = useState<SystemNotification[]>([]);
+  const [systemNotifications, setSystemNotifications] = useState<SystemNotification[]>(() => {
+      const saved = localStorage.getItem('reserva_sys_notifs');
+      return saved ? JSON.parse(saved) : [
+          { id: 'n1', title: 'Bienvenue', message: 'Bienvenue sur Reserva Africa, la plateforme premium de voyage en Afrique.', date: 'Maintenant', read: false, type: 'system' }
+      ];
+  });
   const [favorites, setFavorites] = useState<Set<number>>(new Set());
   const [bookings, setBookings] = useState<Booking[]>(() => {
-      const saved = localStorage.getItem('reserve_bookings');
+      const saved = localStorage.getItem('reserva_bookings');
       return saved ? JSON.parse(saved) : [];
   });
 
-  const [messages, setMessages] = useState<Message[]>([]);
+  const [messages, setMessages] = useState<Message[]>(() => {
+      const saved = localStorage.getItem('reserva_messages');
+      return saved ? JSON.parse(saved) : [];
+  });
   const [reviews, setReviews] = useState<Review[]>([]);
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [systemSettings, setSystemSettings] = useState<SystemSettings>({ commissionRate: 15, serviceFeeRate: 15, maintenanceMode: false });
@@ -347,13 +374,15 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
   });
 
   useEffect(() => {
-    localStorage.setItem('reserve_all_users', JSON.stringify(allUsers));
-    localStorage.setItem('reserve_properties', JSON.stringify(properties));
-    localStorage.setItem('reserve_host_apps', JSON.stringify(hostApplications));
-    localStorage.setItem('reserve_verif_reqs', JSON.stringify(verificationRequests));
-    localStorage.setItem('reserve_bookings', JSON.stringify(bookings));
-    if (user) localStorage.setItem('reserve_user', JSON.stringify(user));
-  }, [allUsers, properties, hostApplications, verificationRequests, bookings, user]);
+    localStorage.setItem('reserva_all_users', JSON.stringify(allUsers));
+    localStorage.setItem('reserva_properties', JSON.stringify(properties));
+    localStorage.setItem('reserva_host_apps', JSON.stringify(hostApplications));
+    localStorage.setItem('reserva_verif_reqs', JSON.stringify(verificationRequests));
+    localStorage.setItem('reserva_bookings', JSON.stringify(bookings));
+    localStorage.setItem('reserva_messages', JSON.stringify(messages));
+    localStorage.setItem('reserva_sys_notifs', JSON.stringify(systemNotifications));
+    if (user) localStorage.setItem('reserva_user', JSON.stringify(user));
+  }, [allUsers, properties, hostApplications, verificationRequests, bookings, user, messages, systemNotifications]);
 
   const addNotification = (type: 'success' | 'error' | 'info', message: string) => {
     const id = Date.now().toString();
@@ -363,15 +392,15 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
 
   const login = (userData: User) => {
     setUser(userData);
-    addNotification('success', `Ravi de vous voir, ${userData.name.split(' ')[0]}`);
+    addNotification('success', `Ravi de vous revoir, ${userData.name.split(' ')[0]}`);
   };
 
-  const logout = () => { setUser(null); localStorage.removeItem('reserve_user'); addNotification('info', 'Déconnecté'); };
+  const logout = () => { setUser(null); localStorage.removeItem('reserva_user'); addNotification('info', 'Vous avez été déconnecté.'); };
 
   const registerUser = (userData: User) => {
       setAllUsers(prev => [...prev, userData]);
       setUser(userData);
-      addNotification('success', 'Compte créé avec succès !');
+      addNotification('success', 'Votre compte Reserva Africa est prêt !');
   };
 
   const updateUser = (data: Partial<User>) => {
@@ -384,12 +413,10 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
 
   const toggleUserStatus = (email: string) => {
       setAllUsers(prev => prev.map(u => u.email === email ? { ...u, status: u.status === 'Active' ? 'Suspended' : 'Active' } : u));
-      if (user?.email === email) setUser(prev => prev ? { ...prev, status: prev.status === 'Active' ? 'Suspended' : 'Active' } : null);
   };
 
   const toggleUserRole = (email: string) => {
       setAllUsers(prev => prev.map(u => u.email === email ? { ...u, role: u.role === 'GUEST' ? 'HOST' : 'GUEST' } : u));
-      if (user?.email === email) setUser(prev => prev ? { ...prev, role: prev.role === 'GUEST' ? 'HOST' : 'GUEST' } : null);
   };
 
   const createAdmin = (admin: User) => setAllUsers(prev => [...prev, admin]);
@@ -416,7 +443,6 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
       setVerificationRequests(prev => prev.map(r => r.id === id ? { ...r, status: 'Approved' } : r));
       setAllUsers(prev => prev.map(u => u.id === req.userId ? { ...u, verificationStatus: 'verified' } : u));
       if (user?.id === req.userId) setUser(prev => prev ? { ...prev, verificationStatus: 'verified' } : null);
-      addNotification('success', 'Identité approuvée');
   };
 
   const rejectVerification = (id: string, reason: string) => {
@@ -425,7 +451,6 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
       setVerificationRequests(prev => prev.map(r => r.id === id ? { ...r, status: 'Rejected' } : r));
       setAllUsers(prev => prev.map(u => u.id === req.userId ? { ...u, verificationStatus: 'unverified' } : u));
       if (user?.id === req.userId) setUser(prev => prev ? { ...prev, verificationStatus: 'unverified' } : null);
-      addNotification('error', 'Identité rejetée');
   };
 
   const submitHostApplication = (app: any) => {
@@ -448,12 +473,25 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
       setHostApplications(prev => prev.map(a => a.id === id ? { ...a, status: 'Approved' } : a));
       setAllUsers(prev => prev.map(u => u.id === app.userId ? { ...u, role: 'HOST' } : u));
       if (user?.id === app.userId) setUser(prev => prev ? { ...prev, role: 'HOST' } : null);
-      addNotification('success', 'Promu au rôle d\'Hôte');
+      addNotification('success', 'Félicitations, vous êtes maintenant hôte !');
   };
 
   const rejectHostApplication = (id: string, reason: string) => {
       setHostApplications(prev => prev.map(a => a.id === id ? { ...a, status: 'Rejected' } : a));
-      addNotification('info', 'Demande hôte rejetée');
+      addNotification('error', `Candidature rejetée : ${reason}`);
+  };
+
+  const checkAvailability = (propertyId: number, start: Date, end: Date) => {
+      const prop = properties.find(p => p.id === propertyId);
+      if (!prop || !prop.blockedDates) return true;
+      const days = Math.ceil(Math.abs(end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24));
+      for (let i = 0; i <= days; i++) {
+          const d = new Date(start);
+          d.setDate(d.getDate() + i);
+          const dateStr = d.toISOString().split('T')[0];
+          if (prop.blockedDates.includes(dateStr)) return false;
+      }
+      return true;
   };
 
   const updatePropertyStatus = (id: number, status: Property['status'], reason?: string) => {
@@ -462,7 +500,41 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
 
   const updateSiteAsset = (id: string, url: string) => {
       setSiteAssets(prev => ({ ...prev, [id]: { ...prev[id], url } }));
-      addNotification('success', 'Média mis à jour');
+      addNotification('success', 'Asset mis à jour.');
+  };
+
+  const sendMessage = (senderId: string, receiverId: string, text: string) => {
+      const newMsg: Message = { id: Date.now().toString(), senderId, receiverId, text, timestamp: new Date().toISOString(), read: false };
+      setMessages(prev => [...prev, newMsg]);
+  };
+
+  const markMessagesRead = (otherUserId: string) => {
+      if (!user) return;
+      setMessages(prev => prev.map(m => m.receiverId === user.id && m.senderId === otherUserId ? { ...m, read: true } : m));
+  };
+
+  const addReview = (propertyId: number, rating: number, comment: string, bookingId: string) => {
+      if (!user) return;
+      const newReview: Review = { id: Date.now().toString(), propertyId, bookingId, authorName: user.name, authorAvatar: user.avatar, rating, comment, date: new Date().toLocaleDateString('fr-FR') };
+      setReviews(prev => [newReview, ...prev]);
+      addNotification('success', 'Merci pour votre avis !');
+  };
+
+  const togglePropertyBlock = (propertyId: number, date: string) => {
+      setProperties(prev => prev.map(p => {
+          if (p.id === propertyId) {
+              const blocks = p.blockedDates || [];
+              const newBlocks = blocks.includes(date) ? blocks.filter(d => d !== date) : [...blocks, date];
+              return { ...p, blockedDates: newBlocks };
+          }
+          return p;
+      }));
+  };
+
+  const requestWithdrawal = (amount: number) => {
+      const newTrx: Transaction = { id: `WDR-${Date.now().toString().slice(-6)}`, date: new Date().toLocaleDateString('fr-FR'), amount, type: 'withdrawal', status: 'Pending', label: 'Retrait de fonds' };
+      setTransactions(prev => [newTrx, ...prev]);
+      addNotification('success', 'Virement en cours de traitement.');
   };
 
   return (
@@ -472,15 +544,17 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
       submitHostApplication, hostApplications, approveHostApplication, rejectHostApplication,
       allUsers, properties, allProperties: properties, updatePropertyStatus,
       notifications, addNotification, removeNotification: (id) => setNotifications(p => p.filter(n => n.id !== id)),
-      systemNotifications, markAllNotificationsRead: () => {},
-      unreadMessageCount: 0, unreadNotificationCount: 0, isLoading: false,
+      systemNotifications, markAllNotificationsRead: () => setSystemNotifications(prev => prev.map(n => ({...n, read: true}))),
+      unreadMessageCount: messages.filter(m => m.receiverId === user?.id && !m.read).length,
+      unreadNotificationCount: systemNotifications.filter(n => !n.read).length,
+      isLoading: false,
       systemSettings, updateSystemSettings: (s) => setSystemSettings(p => ({...p, ...s})),
       favorites, toggleFavorite: (id) => setFavorites(p => { const n = new Set(p); if(n.has(id)) n.delete(id); else n.add(id); return n; }),
       bookings, addBooking: (b) => setBookings(p => [b, ...p]), updateBookingStatus: (id, s) => setBookings(p => p.map(b => b.id === id ? {...b, status: s} : b)),
-      checkAvailability: () => true, addProperty: (p) => setProperties(prev => [p, ...prev]), updateProperty: (p) => setProperties(prev => prev.map(item => item.id === p.id ? p : item)),
-      deleteProperty: (id) => setProperties(p => p.filter(item => item.id !== id)), togglePropertyBlock: () => {},
-      reviews, addReview: () => {}, messages, sendMessage: () => {}, markMessagesRead: () => {},
-      toggleUserRole, toggleUserStatus, createAdmin, transactions, requestWithdrawal: () => {},
+      checkAvailability, addProperty: (p) => setProperties(prev => [p, ...prev]), updateProperty: (p) => setProperties(prev => prev.map(item => item.id === p.id ? p : item)),
+      deleteProperty: (id) => setProperties(p => p.filter(item => item.id !== id)), togglePropertyBlock,
+      reviews, addReview, messages, sendMessage, markMessagesRead,
+      toggleUserRole, toggleUserStatus, createAdmin, transactions, requestWithdrawal,
       siteAssets, updateSiteAsset
     }}>
       {children}

@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useNavigate, useSearchParams } from 'react-router-dom';
+import { useNavigate, useSearchParams, Link } from 'react-router-dom';
 import { useApp } from '../../context/AppContext';
 
 const COUNTRY_CODES = [
@@ -26,7 +26,7 @@ const Payment: React.FC = () => {
   const { addNotification, allProperties, addBooking, user, systemSettings } = useApp();
   
   const property = allProperties.find(p => p.id === Number(id));
-  const displayProperty = property || { title: 'Service', price: '0 F', rawPrice: 0, image: '', location: '', owner: 'Reseva Host' };
+  const displayProperty = property || { title: 'Service', price: '0 F', rawPrice: 0, image: '', location: '', owner: 'Reserva Host' };
   
   const start = checkinParam ? new Date(checkinParam) : new Date();
   const end = checkoutParam ? new Date(checkoutParam) : new Date(new Date().setDate(start.getDate() + 3));
@@ -41,11 +41,16 @@ const Payment: React.FC = () => {
   const [mobileProvider, setMobileProvider] = useState<'mtn' | 'orange' | 'moov' | 'wave'>('mtn');
   const [selectedCountryCode, setSelectedCountryCode] = useState(COUNTRY_CODES[0]);
   const [phoneNumber, setPhoneNumber] = useState('');
+  const [acceptTerms, setAcceptTerms] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
 
   const handlePayment = () => {
     if (method === 'mobile' && !phoneNumber) {
         addNotification('error', 'Veuillez entrer votre numéro de téléphone.');
+        return;
+    }
+    if (!acceptTerms) {
+        addNotification('error', 'Voulez devez accepter les conditions générales.');
         return;
     }
 
@@ -65,9 +70,11 @@ const Payment: React.FC = () => {
             totalAmount: totalAmount,
             status: 'Confirmé',
             type: type as any,
-            hostName: displayProperty.owner || 'Reseva Host',
+            hostName: displayProperty.owner || 'Reserva Host',
+            hostId: property?.ownerId,
             guestName: user?.name || 'Invité',
-            guestAvatar: user?.avatar || 'https://images.unsplash.com/photo-1531123897727-8f129e1688ce?auto=format&fit=crop&w=100&q=80',
+            guestId: user?.id,
+            guestAvatar: user?.avatar || 'https://ui-avatars.com/api/?name=Guest&background=random',
             payoutStatus: 'Pending',
             propertyId: property?.id,
             checkInDate: checkinParam || undefined,
@@ -175,7 +182,6 @@ const Payment: React.FC = () => {
                         </div>
                     </div>
                 </div>
-                <p className="text-xs text-gray-500 mt-4">Paiement sécurisé par authentification push sur votre mobile {selectedCountryCode.country}.</p>
               </div>
             )}
 
@@ -194,18 +200,31 @@ const Payment: React.FC = () => {
                     </div>
                     <div className="flex justify-between p-3 border-b border-gray-100 dark:border-gray-700">
                         <span className="text-gray-500">Titulaire</span>
-                        <span className="font-bold text-gray-900 dark:text-white">Reseva Africa Ltd</span>
+                        <span className="font-bold text-gray-900 dark:text-white">Reserva Africa Ltd</span>
                     </div>
                     <div className="flex justify-between p-3 border-b border-gray-100 dark:border-gray-700">
                         <span className="text-gray-500">IBAN</span>
                         <div className="text-right">
                             <span className="font-mono font-bold text-gray-900 dark:text-white block text-sm">TG76 3005 5029 9100 0123 4567 89</span>
-                            <button className="text-xs text-primary font-bold hover:underline mt-1">Copier</button>
                         </div>
                     </div>
                 </div>
               </div>
             )}
+
+            <div className="p-6 bg-gray-50 dark:bg-gray-800 rounded-2xl border border-gray-100 dark:border-gray-700">
+                <label className="flex items-start gap-4 cursor-pointer">
+                    <input 
+                        type="checkbox" 
+                        checked={acceptTerms}
+                        onChange={(e) => setAcceptTerms(e.target.checked)}
+                        className="mt-1 size-5 rounded border-gray-300 text-primary focus:ring-primary accent-primary" 
+                    />
+                    <span className="text-sm text-gray-600 dark:text-gray-400 leading-relaxed">
+                        J'ai lu et j'accepte les <Link to="/legal/terms" className="text-primary font-bold hover:underline">Conditions Générales d'Utilisation</Link> et la <Link to="/legal/privacy" className="text-primary font-bold hover:underline">Politique de Confidentialité</Link> de Reserva Africa.
+                    </span>
+                </label>
+            </div>
 
             <div className="flex items-center gap-2 justify-center text-gray-400 text-sm py-2">
                 <span className="material-symbols-outlined text-base">lock</span>
@@ -220,7 +239,7 @@ const Payment: React.FC = () => {
                   <div className="size-16 rounded-lg bg-gray-200 bg-cover bg-center" style={{backgroundImage: `url("${displayProperty.image}")`}}></div>
                   <div>
                       <h4 className="font-bold text-gray-900 dark:text-white">{displayProperty.title}</h4>
-                      <p className="text-sm text-gray-500">{diffDays} jours</p>
+                      <p className="text-sm text-gray-500">{diffDays} {type === 'stay' ? 'nuits' : 'jours'}</p>
                   </div>
               </div>
               <div className="space-y-3 mb-6">
@@ -239,10 +258,14 @@ const Payment: React.FC = () => {
               </div>
               <button 
                 onClick={handlePayment}
-                disabled={isProcessing}
-                className="w-full py-4 bg-primary hover:bg-[#d65a1f] text-white text-center font-bold rounded-xl shadow-lg shadow-primary/20 transition-all flex items-center justify-center gap-2"
+                disabled={isProcessing || !acceptTerms}
+                className={`w-full py-4 rounded-xl font-black text-xs uppercase tracking-widest shadow-lg transition-all flex items-center justify-center gap-2 ${
+                    isProcessing || !acceptTerms 
+                    ? 'bg-gray-200 text-gray-400 cursor-not-allowed' 
+                    : 'bg-primary hover:bg-[#d65a1f] text-white shadow-primary/20 active:scale-95'
+                }`}
               >
-                {isProcessing ? 'Traitement...' : `Payer ${totalAmount.toLocaleString()} FCFA`}
+                {isProcessing ? <span className="size-5 border-3 border-white border-t-transparent rounded-full animate-spin"></span> : `Confirmer le paiement`}
               </button>
             </div>
           </div>
