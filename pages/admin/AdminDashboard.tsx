@@ -8,7 +8,6 @@ const AdminDashboard: React.FC = () => {
   const pendingProperties = allProperties.filter(p => p.status === 'En attente').length;
   const pendingApps = hostApplications.filter(a => a.status === 'Pending').length;
   const activeUsers = allUsers.filter(u => u.status === 'Active').length;
-  const totalRevenue = "12.5M FCFA";
 
   return (
     <div className="p-8 max-w-[1600px] mx-auto min-h-screen bg-[#f7f9fc] dark:bg-[#0f1115]">
@@ -19,7 +18,10 @@ const AdminDashboard: React.FC = () => {
           <p className="text-gray-500 dark:text-gray-400 font-medium">Administration Globale de Reserva Africa</p>
         </div>
         <div className="flex gap-3">
-           <button className="bg-white dark:bg-[#1e293b] border border-gray-200 dark:border-gray-700 text-gray-700 dark:text-white px-4 py-2 rounded-xl font-bold hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors flex items-center gap-2">
+           <Link to="/host/setup" className="bg-primary hover:bg-primary-dark text-white px-6 py-3 rounded-2xl font-black text-xs uppercase tracking-widest transition-all shadow-lg shadow-primary/20 flex items-center gap-2 btn-active-scale">
+              <span className="material-symbols-outlined text-lg">add_circle</span> Ajouter une annonce
+           </Link>
+           <button className="bg-white dark:bg-[#1e293b] border border-gray-200 dark:border-gray-700 text-gray-700 dark:text-white px-4 py-3 rounded-xl font-bold hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors flex items-center gap-2">
               <span className="material-symbols-outlined text-sm">download</span> Rapport
            </button>
         </div>
@@ -96,6 +98,10 @@ const AdminDashboard: React.FC = () => {
          <div className="bg-white dark:bg-[#1e293b] p-8 rounded-[32px] border border-gray-100 dark:border-gray-800 shadow-sm">
             <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-6">Actions Rapides</h3>
             <div className="space-y-3">
+                <Link to="/host/setup" className="w-full flex items-center gap-4 p-5 rounded-2xl bg-primary text-white hover:bg-primary-dark transition-all shadow-lg shadow-primary/20 group">
+                    <span className="material-symbols-outlined">add_business</span>
+                    <span className="font-black text-xs uppercase tracking-widest">Nouvelle Annonce Admin</span>
+                </Link>
                 <Link to="/admin/requests" className="w-full flex items-center gap-3 p-4 rounded-xl bg-gray-50 dark:bg-gray-800 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors text-left group">
                     <span className="material-symbols-outlined text-gray-500 group-hover:text-primary">how_to_reg</span>
                     <span className="font-bold text-gray-700 dark:text-gray-200">Review Applications</span>

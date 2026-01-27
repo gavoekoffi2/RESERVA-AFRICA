@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useApp } from '../../context/AppContext';
 
@@ -6,6 +6,7 @@ type AssetType = 'Hébergement' | 'Voiture' | 'Expérience';
 
 const AddProperty: React.FC = () => {
   const navigate = useNavigate();
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const { addProperty, user, addNotification } = useApp();
   const [step, setStep] = useState(0);
   const totalSteps = 10;
@@ -32,18 +33,68 @@ const AddProperty: React.FC = () => {
   // Protection & Audit
   useEffect(() => {
     if (!user) { navigate('/login'); return; }
-    if (user.role === 'GUEST' || user.verificationStatus !== 'verified') {
-      addNotification('error', 'Seuls les hôtes vérifiés peuvent publier.');
+    const isAdmin = user.role === 'ADMIN' || user.role === 'SUPER_ADMIN';
+    const isVerifiedHost = user.role === 'HOST' && user.verificationStatus === 'verified';
+    
+    if (!isAdmin && !isVerifiedHost) {
+      addNotification('error', 'Seuls les comptes vérifiés ou administrateurs peuvent publier.');
       navigate('/become-a-host');
     }
-  }, [user, navigate]);
+  }, [user, navigate, addNotification]);
 
   const nextStep = () => setStep(p => Math.min(p + 1, totalSteps));
   const prevStep = () => setStep(p => Math.max(p - 1, 0));
 
+  const handleClose = (e: React.MouseEvent) => {
+    e.preventDefault();
+    if (confirm('Quitter sans enregistrer ? Vos modifications seront perdues.')) {
+      const destination = (user?.role === 'ADMIN' || user?.role === 'SUPER_ADMIN') 
+        ? '/admin/dashboard' 
+        : '/host/dashboard';
+      navigate(destination);
+    }
+  };
+
+  const handleFileClick = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (fileInputRef.current) {
+        fileInputRef.current.click();
+    }
+  };
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (files && files.length > 0) {
+      const filePromises = Array.from(files).map((file: File) => {
+        return new Promise<string>((resolve) => {
+          const reader = new FileReader();
+          reader.onloadend = () => resolve(reader.result as string);
+          reader.readAsDataURL(file);
+        });
+      });
+
+      Promise.all(filePromises).then(newPhotos => {
+        setFormData(prev => ({ ...prev, photos: [...prev.photos, ...newPhotos] }));
+        addNotification('success', `${newPhotos.length} photo(s) ajoutée(s).`);
+      });
+    }
+    // Reset input value to allow selecting the same file again
+    if (e.target) e.target.value = '';
+  };
+
+  const removePhoto = (index: number) => {
+    setFormData(prev => ({
+      ...prev,
+      photos: prev.photos.filter((_, i) => i !== index)
+    }));
+  };
+
   const handlePublish = async () => {
     setIsPublishing(true);
     await new Promise(r => setTimeout(r, 2000));
+
+    const isAdmin = user?.role === 'ADMIN' || user?.role === 'SUPER_ADMIN';
 
     addProperty({
       id: Date.now(),
@@ -53,7 +104,7 @@ const AddProperty: React.FC = () => {
       price: `${formData.price.toLocaleString()} F`,
       rawPrice: formData.price,
       image: formData.photos[0] || 'https://images.unsplash.com/photo-1613977257363-707ba9348227?auto=format&fit=crop&w=1200&q=80',
-      status: 'En attente',
+      status: isAdmin ? 'En ligne' : 'En attente',
       owner: user?.name || '',
       ownerId: user?.id || '',
       category: formData.category,
@@ -65,8 +116,10 @@ const AddProperty: React.FC = () => {
     });
 
     setIsPublishing(false);
-    addNotification('success', 'Annonce créée ! En cours de modération.');
-    navigate('/host/dashboard');
+    addNotification('success', isAdmin ? 'Bien publié officiellement !' : 'Annonce créée ! En cours de modération.');
+    
+    if (isAdmin) navigate('/admin/properties');
+    else navigate('/host/dashboard');
   };
 
   const Counter = ({ label, sublabel, value, onChange }: any) => (
@@ -110,13 +163,13 @@ const AddProperty: React.FC = () => {
         return (
           <div className="flex flex-col md:flex-row h-full w-full max-w-[1440px] mx-auto animate-reveal">
             <div className="flex-1 bg-gradient-to-br from-primary to-orange-600 p-12 md:p-24 text-white flex flex-col justify-center">
-              <h1 className="text-5xl md:text-7xl font-black tracking-tighter leading-none mb-8">C'est simple de <br/> devenir hôte <br/> sur Reserva.</h1>
+              <h1 className="text-5xl md:text-7xl font-black tracking-tighter leading-none mb-8">C'est simple de <br/> ajouter un bien <br/> sur Reserva.</h1>
               <p className="text-xl font-bold opacity-90 max-w-md">Accompagnez-nous pour créer une annonce exceptionnelle en quelques minutes.</p>
             </div>
             <div className="flex-1 bg-white dark:bg-[#0a0f18] p-12 md:p-24 flex flex-col justify-center items-center">
                 <div className="max-w-md w-full space-y-12">
                    {[
-                     { n: 1, t: 'Parlez-nous de votre bien', d: 'Indiquez le type, la catégorie et la localisation.' },
+                     { n: 1, t: 'Parlez-nous du bien', d: 'Indiquez le type, la catégorie et la localisation.' },
                      { n: 2, t: 'Faites-le sortir du lot', d: 'Ajoutez des photos, un titre et une description.' },
                      { n: 3, t: 'Finalisez et publiez', d: 'Choisissez un prix et publiez votre annonce.' },
                    ].map(item => (
@@ -135,7 +188,7 @@ const AddProperty: React.FC = () => {
       case 1:
         return (
           <div className="max-w-3xl mx-auto w-full px-6 animate-reveal">
-            <h2 className="text-3xl md:text-4xl font-black mb-12 tracking-tight text-center md:text-left">Lequel de ces logements décrit le mieux votre bien ?</h2>
+            <h2 className="text-3xl md:text-4xl font-black mb-12 tracking-tight text-center md:text-left">Lequel de ces logements décrit le mieux le bien ?</h2>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               {[
                 { l: 'Hébergement', i: 'home_work', d: 'Villas, appartements, lodges...' },
@@ -177,23 +230,36 @@ const AddProperty: React.FC = () => {
       case 3:
         return (
           <div className="max-w-2xl mx-auto w-full px-6 animate-reveal">
-            <h2 className="text-3xl md:text-4xl font-black mb-8 tracking-tight">Où se situe votre bien ?</h2>
+            <h2 className="text-3xl md:text-4xl font-black mb-8 tracking-tight">Où se situe le bien ?</h2>
             <div className="bg-gray-50 dark:bg-gray-800 p-8 rounded-[32px] border border-gray-100 dark:border-gray-700 shadow-inner">
-               <div className="flex items-center gap-4 bg-white dark:bg-gray-900 p-4 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700">
+               <div className="flex items-center gap-4 bg-white dark:bg-gray-900 p-4 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 focus-within:ring-2 focus-within:ring-primary/20 transition-all">
                   <span className="material-symbols-outlined text-primary">location_on</span>
                   <input 
                     type="text"
                     value={formData.location}
                     onChange={e => setFormData({...formData, location: e.target.value})}
-                    placeholder="Saisissez une adresse..."
+                    placeholder="Saisissez une adresse (Ville, Pays)..."
                     className="flex-1 bg-transparent border-none outline-none font-bold text-lg"
                     autoFocus
                   />
                </div>
-               <div className="mt-8 h-64 bg-gray-200 dark:bg-gray-700 rounded-2xl overflow-hidden relative grayscale opacity-50">
-                  <div className="absolute inset-0 flex items-center justify-center">
-                    <span className="font-black text-gray-400 uppercase tracking-widest text-xs">Prévisualisation de la carte</span>
-                  </div>
+               <div className="mt-8 h-64 bg-gray-200 dark:bg-gray-700 rounded-2xl overflow-hidden relative shadow-inner border border-gray-200 dark:border-gray-600">
+                  {formData.location.length > 2 ? (
+                    <iframe 
+                      width="100%" 
+                      height="100%" 
+                      frameBorder="0" 
+                      scrolling="no" 
+                      src={`https://maps.google.com/maps?q=${encodeURIComponent(formData.location)}&t=&z=13&ie=UTF8&iwloc=&output=embed`}
+                      className="absolute inset-0 w-full h-full opacity-90 grayscale-[0.2] dark:invert"
+                      title="Location Preview"
+                    ></iframe>
+                  ) : (
+                    <div className="absolute inset-0 flex flex-col items-center justify-center text-gray-400 gap-3">
+                      <span className="material-symbols-outlined text-5xl opacity-20">map</span>
+                      <span className="font-black uppercase tracking-widest text-[10px]">Saisissez une adresse pour voir la carte</span>
+                    </div>
+                  )}
                </div>
             </div>
           </div>
@@ -257,22 +323,52 @@ const AddProperty: React.FC = () => {
         );
       case 6:
         return (
-          <div className="max-w-3xl mx-auto w-full px-6 animate-reveal">
-            <h2 className="text-3xl md:text-4xl font-black mb-4 tracking-tight">Ajoutez des photos de votre bien.</h2>
-            <p className="text-gray-500 mb-12 font-medium">Vous aurez besoin d'au moins 1 photo pour commencer. Vous pourrez en ajouter d'autres plus tard.</p>
-            <div className="aspect-video rounded-[40px] border-2 border-dashed border-gray-300 dark:border-gray-700 flex flex-col items-center justify-center bg-gray-50 dark:bg-gray-800/50 hover:bg-gray-100 transition-colors cursor-pointer group">
-               <span className="material-symbols-outlined text-6xl text-gray-300 group-hover:scale-110 transition-transform">add_a_photo</span>
-               <p className="mt-4 font-black text-gray-400 uppercase tracking-widest text-xs">Faire glisser ou cliquer pour charger</p>
+          <div className="max-w-4xl mx-auto w-full px-6 animate-reveal">
+            <h2 className="text-3xl md:text-4xl font-black mb-4 tracking-tight">Ajoutez des photos du bien.</h2>
+            <p className="text-gray-500 mb-12 font-medium">Téléchargez au moins une photo pour présenter votre offre.</p>
+            
+            <input 
+              type="file" 
+              ref={fileInputRef} 
+              multiple 
+              accept="image/*" 
+              className="hidden" 
+              onChange={handleFileChange} 
+            />
+
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                <div 
+                  onClick={handleFileClick}
+                  className="aspect-square rounded-[40px] border-2 border-dashed border-gray-300 dark:border-gray-700 flex flex-col items-center justify-center bg-gray-50 dark:bg-gray-800/50 hover:bg-gray-100 dark:hover:bg-gray-800 transition-all cursor-pointer group shadow-inner"
+                >
+                   <span className="material-symbols-outlined text-5xl text-gray-300 group-hover:scale-110 group-hover:text-primary transition-all">add_a_photo</span>
+                   <p className="mt-4 font-black text-gray-400 uppercase tracking-widest text-[9px]">Cliquer pour ajouter</p>
+                </div>
+
+                {formData.photos.map((src, idx) => (
+                    <div key={idx} className="aspect-square rounded-[40px] overflow-hidden relative shadow-lg border border-gray-100 dark:border-gray-800 group animate-reveal">
+                        <img src={src} className="w-full h-full object-cover" alt={`Preview ${idx}`} />
+                        <button 
+                            onClick={(e) => { e.stopPropagation(); removePhoto(idx); }}
+                            className="absolute top-4 right-4 bg-red-500 text-white size-8 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity shadow-lg hover:scale-110"
+                        >
+                            <span className="material-symbols-outlined text-sm">close</span>
+                        </button>
+                        {idx === 0 && (
+                            <div className="absolute bottom-4 left-4 bg-white/95 dark:bg-black/90 px-3 py-1 rounded-lg text-[8px] font-black uppercase tracking-widest shadow-lg">Image principale</div>
+                        )}
+                    </div>
+                ))}
             </div>
           </div>
         );
       case 7:
         return (
           <div className="max-w-2xl mx-auto w-full px-6 animate-reveal">
-            <h2 className="text-3xl md:text-4xl font-black mb-4 tracking-tight">Donnez un titre à votre bien.</h2>
+            <h2 className="text-3xl md:text-4xl font-black mb-4 tracking-tight">Donnez un titre accrocheur.</h2>
             <p className="text-gray-500 mb-12 font-medium">Les titres courts sont les plus efficaces. Ne vous inquiétez pas, vous pourrez toujours le modifier.</p>
             <textarea 
-              className="w-full p-8 rounded-3xl border-2 border-gray-100 dark:border-gray-800 bg-gray-50 dark:bg-gray-900 outline-none focus:border-black dark:focus:border-white transition-all font-black text-3xl text-gray-900 dark:text-white h-48 resize-none"
+              className="w-full p-8 rounded-3xl border-2 border-gray-100 dark:border-gray-800 bg-gray-50 dark:bg-gray-900 outline-none focus:border-black dark:focus:border-white transition-all font-black text-3xl text-gray-900 dark:text-white h-48 resize-none shadow-inner"
               placeholder="Ex: Villa Emeraude avec vue sur mer"
               value={formData.title}
               onChange={e => setFormData({...formData, title: e.target.value})}
@@ -284,10 +380,10 @@ const AddProperty: React.FC = () => {
       case 8:
         return (
           <div className="max-w-2xl mx-auto w-full px-6 animate-reveal">
-            <h2 className="text-3xl md:text-4xl font-black mb-4 tracking-tight">Décrivez votre offre.</h2>
-            <p className="text-gray-500 mb-12 font-medium">Partagez ce qui rend votre bien unique et attrayant pour les voyageurs.</p>
+            <h2 className="text-3xl md:text-4xl font-black mb-4 tracking-tight">Décrivez l'offre.</h2>
+            <p className="text-gray-500 mb-12 font-medium">Partagez ce qui rend ce bien unique et attrayant pour les voyageurs.</p>
             <textarea 
-              className="w-full p-8 rounded-[40px] border-2 border-gray-100 dark:border-gray-800 bg-gray-50 dark:bg-gray-900 outline-none focus:border-black dark:focus:border-white transition-all font-bold text-lg leading-relaxed h-64"
+              className="w-full p-8 rounded-[40px] border-2 border-gray-100 dark:border-gray-800 bg-gray-50 dark:bg-gray-900 outline-none focus:border-black dark:focus:border-white transition-all font-bold text-lg leading-relaxed h-64 shadow-inner"
               placeholder="Décrivez l'ambiance, les environs..."
               value={formData.description}
               onChange={e => setFormData({...formData, description: e.target.value})}
@@ -298,26 +394,26 @@ const AddProperty: React.FC = () => {
       case 9:
         return (
           <div className="max-w-2xl mx-auto w-full px-6 animate-reveal text-center">
-            <h2 className="text-3xl md:text-4xl font-black mb-4 tracking-tight">Maintenant, fixez votre prix.</h2>
-            <p className="text-gray-500 mb-16 font-medium">Vous pouvez le modifier à tout moment.</p>
+            <h2 className="text-3xl md:text-4xl font-black mb-4 tracking-tight">Fixez le prix final.</h2>
+            <p className="text-gray-500 mb-16 font-medium">Vous pouvez le modifier à tout moment selon la saison.</p>
             <div className="flex flex-col items-center gap-6">
-                <div className="flex items-center gap-4 bg-gray-50 dark:bg-gray-800 px-12 py-10 rounded-[60px] border-2 border-gray-100 dark:border-gray-700 shadow-inner group">
-                   <span className="text-6xl font-black text-gray-300 group-focus-within:text-black dark:group-focus-within:text-white transition-colors">F</span>
+                <div className="flex items-center gap-4 bg-gray-50 dark:bg-gray-800 px-12 py-10 rounded-[60px] border-2 border-gray-100 dark:border-gray-700 shadow-inner group transition-all focus-within:border-black dark:focus-within:border-white">
+                   <span className="text-3xl md:text-4xl font-black text-gray-300 group-focus-within:text-black dark:group-focus-within:text-white transition-colors">F</span>
                    <input 
                      type="number"
                      value={formData.price || ''}
                      onChange={e => setFormData({...formData, price: Number(e.target.value)})}
-                     className="bg-transparent border-none outline-none font-black text-7xl md:text-9xl text-gray-900 dark:text-white text-center w-full max-w-[400px]"
+                     className="bg-transparent border-none outline-none font-black text-3xl md:text-4xl text-gray-900 dark:text-white text-center w-full max-w-[400px]"
                      placeholder="0"
                      autoFocus
                    />
                 </div>
-                <div className="mt-10 p-8 bg-black dark:bg-white text-white dark:text-black rounded-3xl w-full flex justify-between items-center shadow-2xl">
+                <div className="mt-10 p-8 bg-black dark:bg-white text-white dark:text-black rounded-3xl w-full flex justify-between items-center shadow-2xl transition-all">
                    <div className="text-left">
-                      <p className="text-[10px] font-black uppercase tracking-[0.2em] mb-1 opacity-60">Gains nets estimés (Hôte)</p>
+                      <p className="text-[10px] font-black uppercase tracking-[0.2em] mb-1 opacity-60">Gains nets estimés</p>
                       <p className="text-3xl font-black">{(formData.price * 0.85).toLocaleString()} F</p>
                    </div>
-                   <span className="text-[10px] font-black uppercase tracking-widest opacity-50 max-w-[120px] text-right">Après commission Reserva (15%)</span>
+                   <span className="text-[10px] font-black uppercase tracking-widest opacity-50 max-w-[120px] text-right">Calculé après commission Reserva</span>
                 </div>
             </div>
           </div>
@@ -325,7 +421,7 @@ const AddProperty: React.FC = () => {
       case 10:
         return (
           <div className="max-w-4xl mx-auto w-full px-6 animate-reveal">
-            <h2 className="text-3xl md:text-4xl font-black mb-12 tracking-tight">Vérifiez votre annonce.</h2>
+            <h2 className="text-3xl md:text-4xl font-black mb-12 tracking-tight">Vérification finale.</h2>
             <div className="bg-white dark:bg-[#1a202c] rounded-[50px] border-2 border-gray-100 dark:border-gray-800 shadow-2xl overflow-hidden flex flex-col md:flex-row group transition-all">
                 <div className="w-full md:w-[450px] aspect-[4/5] bg-gray-100 shrink-0 overflow-hidden relative">
                     <img 
@@ -333,7 +429,7 @@ const AddProperty: React.FC = () => {
                       className="w-full h-full object-cover transition-transform group-hover:scale-105 duration-[4s]" 
                       alt="Review" 
                     />
-                    <div className="absolute top-8 left-8 bg-white/95 dark:bg-black/90 px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest shadow-xl">Aperçu de l'annonce</div>
+                    <div className="absolute top-8 left-8 bg-white/95 dark:bg-black/90 px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest shadow-xl">Aperçu du bien</div>
                 </div>
                 <div className="p-12 flex flex-col justify-between flex-1">
                    <div>
@@ -341,12 +437,12 @@ const AddProperty: React.FC = () => {
                       <h3 className="text-4xl font-black text-gray-900 dark:text-white leading-none mb-6 line-clamp-2">{formData.title || 'Nouvelle Annonce'}</h3>
                       <div className="space-y-4 pt-4 border-t border-gray-100 dark:border-gray-800">
                          <div className="flex justify-between items-center">
-                            <span className="font-bold text-gray-500">Tarif par nuit/jour</span>
+                            <span className="font-bold text-gray-500">Tarif public</span>
                             <span className="font-black text-2xl text-primary">{formData.price.toLocaleString()} F</span>
                          </div>
                          <div className="flex justify-between items-center">
-                            <span className="font-bold text-gray-500">Type</span>
-                            <span className="font-black text-gray-900 dark:text-white">{formData.type}</span>
+                            <span className="font-bold text-gray-500">Source</span>
+                            <span className="font-black text-gray-900 dark:text-white">{user?.role === 'HOST' ? 'Hôte' : 'Plateforme Officielle'}</span>
                          </div>
                       </div>
                    </div>
@@ -354,7 +450,11 @@ const AddProperty: React.FC = () => {
                       <div className="size-14 rounded-full bg-green-100 dark:bg-green-900/30 flex items-center justify-center text-green-600">
                          <span className="material-symbols-outlined text-3xl font-black">verified</span>
                       </div>
-                      <p className="text-sm font-bold text-gray-500 leading-relaxed">Votre annonce sera validée par nos experts sous 24h avant d'être publiée.</p>
+                      <p className="text-sm font-bold text-gray-500 leading-relaxed">
+                        {user?.role === 'ADMIN' || user?.role === 'SUPER_ADMIN' 
+                          ? "En tant qu'admin, cet item sera publié immédiatement sans modération." 
+                          : "Votre annonce sera validée par nos experts sous 24h avant d'être publiée."}
+                      </p>
                    </div>
                 </div>
             </div>
@@ -369,7 +469,7 @@ const AddProperty: React.FC = () => {
     <div className="min-h-screen bg-white dark:bg-[#0a0f18] flex flex-col font-display selection:bg-primary selection:text-white overflow-x-hidden">
       
       {/* Dynamic Header */}
-      <header className="h-20 px-6 md:px-12 flex justify-between items-center border-b border-gray-50 dark:border-gray-800/50 bg-white/95 dark:bg-[#0a0f18]/95 backdrop-blur-xl sticky top-0 z-[100]">
+      <header className="h-20 px-6 md:px-12 flex justify-between items-center border-b border-gray-50 dark:border-gray-800/50 bg-white/95 dark:bg-[#0a0f18]/95 backdrop-blur-xl sticky top-0 z-[110]">
          <div className="flex items-center gap-3">
             <div className="size-10 rounded-2xl bg-primary flex items-center justify-center text-white shadow-lg rotate-6">
               <span className="material-symbols-outlined text-xl font-black">add_business</span>
@@ -377,8 +477,8 @@ const AddProperty: React.FC = () => {
             <span className="text-lg font-black italic text-gray-900 dark:text-white hidden sm:block">Reserva <span className="text-primary not-italic">Setup.</span></span>
          </div>
          <button 
-           onClick={() => { if (confirm('Quitter sans enregistrer ?')) navigate('/host/dashboard'); }}
-           className="px-8 py-2.5 rounded-full border-2 border-gray-100 dark:border-gray-800 font-black text-[10px] uppercase tracking-widest hover:bg-gray-50 dark:hover:bg-gray-800 transition-all active:scale-95 text-gray-900 dark:text-white shadow-sm"
+           onClick={handleClose}
+           className="px-8 py-2.5 rounded-full border-2 border-gray-100 dark:border-gray-800 font-black text-[10px] uppercase tracking-widest hover:bg-gray-50 dark:hover:bg-gray-800 transition-all active:scale-95 text-gray-900 dark:text-white shadow-sm flex items-center gap-2"
          >
            Fermer et quitter
          </button>
@@ -421,6 +521,7 @@ const AddProperty: React.FC = () => {
                     onClick={nextStep} 
                     disabled={
                       (step === 3 && !formData.location) || 
+                      (step === 6 && formData.photos.length === 0) ||
                       (step === 7 && !formData.title) || 
                       (step === 9 && formData.price <= 0)
                     }
