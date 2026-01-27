@@ -234,6 +234,23 @@ const Header: React.FC<{ toggleTheme: () => void; isDark: boolean; settings: Loc
         </div>
       </header>
       {!isLanding && <div className="h-20" />}
+      {mobileMenuOpen && (
+          <div className="fixed inset-0 z-[120] bg-white dark:bg-[#0a0f18] animate-fade-in flex flex-col p-10">
+              <div className="flex justify-between items-center mb-12">
+                  <span className="text-2xl font-black italic">Reserva <span className="text-primary not-italic">Africa.</span></span>
+                  <button onClick={() => setMobileMenuOpen(false)} className="size-12 rounded-full bg-gray-100 dark:bg-gray-800 flex items-center justify-center"><span className="material-symbols-outlined">close</span></button>
+              </div>
+              <nav className="flex flex-col gap-6">
+                <Link to="/search/stays" onClick={() => setMobileMenuOpen(false)} className="text-3xl font-black">Séjours</Link>
+                <Link to="/search/cars" onClick={() => setMobileMenuOpen(false)} className="text-3xl font-black">Voitures</Link>
+                <Link to="/search/experiences" onClick={() => setMobileMenuOpen(false)} className="text-3xl font-black">Expériences</Link>
+                <Link to="/taxi" onClick={() => setMobileMenuOpen(false)} className="text-3xl font-black">Airport Taxi</Link>
+              </nav>
+              <div className="mt-auto pt-10 border-t border-gray-100 dark:border-gray-800">
+                  <Link to="/become-a-host" onClick={() => setMobileMenuOpen(false)} className="w-full block text-center py-5 bg-primary text-white rounded-2xl font-black uppercase tracking-widest text-xs">Devenir Hôte</Link>
+              </div>
+          </div>
+      )}
     </>
   );
 };
@@ -389,26 +406,28 @@ const Footer: React.FC<{ settings: LocationSettings }> = ({ settings }) => {
 const HostLayout = () => {
     const { user } = useApp();
     const location = useLocation();
-    if (!user || (user.role !== 'HOST' && user.role !== 'SUPER_ADMIN')) return <Navigate to="/become-a-host" />;
+    if (!user || (user.role !== 'HOST' && user.role !== 'SUPER_ADMIN' && user.role !== 'ADMIN')) return <Navigate to="/become-a-host" />;
+    
+    const links = [
+        { path: '/host/dashboard', label: 'Dashboard', icon: 'dashboard' },
+        { path: '/host/properties', label: 'Annonces', icon: 'home_work' },
+        { path: '/host/calendar', label: 'Calendrier', icon: 'calendar_today' },
+        { path: '/host/wallet', label: 'Portefeuille', icon: 'payments' },
+        { path: '/host/messages', label: 'Messages', icon: 'chat' },
+    ];
+
     return (
         <div className="flex flex-col lg:flex-row h-screen overflow-hidden bg-[#f7f9fc] dark:bg-[#0f1115] font-display">
-            <aside className="w-72 bg-white dark:bg-[#1e293b] border-r border-gray-100 dark:border-gray-800 hidden lg:flex flex-col">
+            <aside className="w-72 bg-white dark:bg-[#1e293b] border-r border-gray-100 dark:border-gray-800 hidden lg:flex flex-col shrink-0">
                 <div className="p-8 border-b border-gray-100 dark:border-gray-800">
                     <h2 className="font-black text-xl text-primary tracking-tighter uppercase">RESERVA HOST</h2>
                 </div>
                 <nav className="p-4 space-y-1 flex-1">
-                    {[
-                        { path: '/host/dashboard', label: 'Dashboard', icon: 'dashboard' },
-                        { path: '/host/properties', label: 'Mes Annonces', icon: 'home_work' },
-                        { path: '/host/calendar', label: 'Calendrier', icon: 'calendar_today' },
-                        { path: '/host/wallet', label: 'Revenus', icon: 'payments' },
-                        { path: '/host/messages', label: 'Messages', icon: 'chat' },
-                        { path: '/host/reviews', label: 'Avis', icon: 'star' },
-                    ].map(link => (
+                    {links.map(link => (
                         <Link 
                             key={link.path}
                             to={link.path} 
-                            className={`flex items-center gap-4 px-5 py-3 rounded-2xl font-black text-sm transition-all ${location.pathname === link.path ? 'bg-primary text-white shadow-lg shadow-primary/20' : 'text-gray-500 hover:bg-gray-50 dark:hover:bg-gray-800'}`}
+                            className={`flex items-center gap-4 px-5 py-3 rounded-2xl font-black text-sm transition-all ${location.pathname === link.path ? 'bg-primary text-white shadow-lg' : 'text-gray-500 hover:bg-gray-50 dark:hover:bg-gray-800'}`}
                         >
                             <span className="material-symbols-outlined text-[22px]">{link.icon}</span>
                             {link.label}
@@ -422,36 +441,73 @@ const HostLayout = () => {
                     </Link>
                 </div>
             </aside>
-            <main className="flex-1 overflow-auto"><Outlet /></main>
+            
+            <main className="flex-1 overflow-auto pb-24 lg:pb-0 relative">
+                <Outlet />
+            </main>
+
+            {/* Mobile Navigation Bar */}
+            <div className="lg:hidden fixed bottom-0 left-0 right-0 h-20 bg-white dark:bg-[#1e293b] border-t border-gray-100 dark:border-gray-800 flex justify-around items-center px-4 z-[100] shadow-[0_-10px_20px_rgba(0,0,0,0.05)]">
+                {links.map(link => (
+                    <Link key={link.path} to={link.path} className={`flex flex-col items-center gap-1 ${location.pathname === link.path ? 'text-primary' : 'text-gray-400'}`}>
+                        <span className="material-symbols-outlined text-[24px]">{link.icon}</span>
+                        <span className="text-[8px] font-black uppercase tracking-widest">{link.label}</span>
+                    </Link>
+                ))}
+            </div>
         </div>
     );
 };
 
 const AdminLayout = () => {
     const { user } = useApp();
+    const location = useLocation();
     if (!user || (user.role !== 'ADMIN' && user.role !== 'SUPER_ADMIN')) return <Navigate to="/" />;
+
+    const links = [
+        { path: '/admin/dashboard', label: 'Tableau', icon: 'dashboard' },
+        { path: '/admin/requests', label: 'Dossiers', icon: 'how_to_reg' },
+        { path: '/admin/properties', label: 'Biens', icon: 'rule' },
+        { path: '/admin/users', label: 'Membres', icon: 'group' },
+        { path: '/admin/bookings', label: 'Résas', icon: 'book_online' },
+    ];
+
     return (
-        <div className="flex h-screen overflow-hidden font-display">
-            <aside className="w-72 bg-black text-white flex flex-col shrink-0">
+        <div className="flex flex-col lg:flex-row h-screen overflow-hidden font-display bg-gray-50 dark:bg-black">
+            <aside className="w-72 bg-black text-white flex flex-col shrink-0 hidden lg:flex">
                 <div className="p-8 border-b border-white/10">
-                   <h2 className="text-xl font-black tracking-tight">ADMIN PANEL</h2>
+                   <h2 className="text-xl font-black tracking-tight uppercase">ADMIN PANEL</h2>
                 </div>
                 <nav className="p-4 flex flex-col gap-1 flex-1 overflow-y-auto no-scrollbar">
-                    <Link to="/admin/dashboard" className="flex items-center gap-3 p-4 hover:bg-white/10 rounded-2xl transition-colors font-bold"><span className="material-symbols-outlined">dashboard</span> Dashboard</Link>
-                    <Link to="/admin/requests" className="flex items-center gap-3 p-4 hover:bg-white/10 rounded-2xl transition-colors font-bold"><span className="material-symbols-outlined">how_to_reg</span> Candidatures</Link>
-                    <Link to="/admin/properties" className="flex items-center gap-3 p-4 hover:bg-white/10 rounded-2xl transition-colors font-bold"><span className="material-symbols-outlined">rule</span> Modération</Link>
-                    <Link to="/admin/bookings" className="flex items-center gap-3 p-4 hover:bg-white/10 rounded-2xl transition-colors font-bold"><span className="material-symbols-outlined">book_online</span> Réservations</Link>
-                    <Link to="/admin/users" className="flex items-center gap-3 p-4 hover:bg-white/10 rounded-2xl transition-colors font-bold"><span className="material-symbols-outlined">group</span> Utilisateurs</Link>
+                    {links.map(link => (
+                        <Link key={link.path} to={link.path} className={`flex items-center gap-3 p-4 rounded-2xl transition-colors font-bold ${location.pathname === link.path ? 'bg-primary text-white' : 'hover:bg-white/10'}`}>
+                            <span className="material-symbols-outlined">{link.icon}</span> {link.label}
+                        </Link>
+                    ))}
                     <Link to="/admin/finance" className="flex items-center gap-3 p-4 hover:bg-white/10 rounded-2xl transition-colors font-bold"><span className="material-symbols-outlined">payments</span> Finances</Link>
-                    <Link to="/admin/media" className="flex items-center gap-3 p-4 hover:bg-white/10 rounded-2xl transition-colors font-bold"><span className="material-symbols-outlined">image</span> Médiathèque</Link>
-                    <Link to="/admin/team" className="flex items-center gap-3 p-4 hover:bg-white/10 rounded-2xl transition-colors font-bold"><span className="material-symbols-outlined">admin_panel_settings</span> Équipe</Link>
+                    <Link to="/admin/media" className="flex items-center gap-3 p-4 hover:bg-white/10 rounded-2xl transition-colors font-bold"><span className="material-symbols-outlined">image</span> Médias</Link>
                     <div className="mt-auto pt-4 border-t border-white/10">
                         <Link to="/admin/system" className="flex items-center gap-3 p-4 hover:bg-white/10 rounded-2xl transition-colors font-bold"><span className="material-symbols-outlined">settings</span> Configuration</Link>
                         <Link to="/" className="flex items-center gap-3 p-4 hover:bg-white/10 rounded-2xl transition-colors font-bold"><span className="material-symbols-outlined">home</span> Retour Site</Link>
                     </div>
                 </nav>
             </aside>
-            <main className="flex-1 overflow-auto bg-gray-50 dark:bg-black"><Outlet /></main>
+
+            <main className="flex-1 overflow-auto pb-24 lg:pb-0"><Outlet /></main>
+
+            {/* Mobile Navigation Bar Admin */}
+            <div className="lg:hidden fixed bottom-0 left-0 right-0 h-20 bg-black text-white flex justify-around items-center px-4 z-[100] shadow-[0_-10px_30px_rgba(0,0,0,0.5)]">
+                {links.map(link => (
+                    <Link key={link.path} to={link.path} className={`flex flex-col items-center gap-1 ${location.pathname === link.path ? 'text-primary' : 'text-gray-500'}`}>
+                        <span className="material-symbols-outlined text-[24px]">{link.icon}</span>
+                        <span className="text-[8px] font-black uppercase tracking-widest">{link.label}</span>
+                    </Link>
+                ))}
+                <Link to="/admin/system" className="flex flex-col items-center gap-1 text-gray-500">
+                    <span className="material-symbols-outlined text-[24px]">settings</span>
+                    <span className="text-[8px] font-black uppercase tracking-widest">Conf.</span>
+                </Link>
+            </div>
         </div>
     );
 };
