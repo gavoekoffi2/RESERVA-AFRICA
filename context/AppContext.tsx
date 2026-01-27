@@ -218,7 +218,7 @@ const MOCK_PROPERTIES: Property[] = [
     reviews: 42, 
     coordinates: { lat: 6.1366, lng: 1.2222 }, 
     blockedDates: [],
-    description: "Une villa d'exception face à l'Océan Atlantique."
+    description: "Une villa d'exception face à l'Océan Atlantique pour vos séjours de luxe."
   },
   { 
     id: 2, 
@@ -259,44 +259,6 @@ const MOCK_PROPERTIES: Property[] = [
     blockedDates: [] 
   },
   { 
-    id: 5, 
-    title: 'Range Rover Vogue Sport', 
-    location: 'Dakar, Sénégal', 
-    type: 'Voiture', 
-    category: 'Luxe', 
-    price: '120 000 F', 
-    rawPrice: 120000, 
-    image: 'https://images.unsplash.com/photo-1549317661-bd32c8ce0db2?auto=format&fit=crop&w=1200&q=80', 
-    status: 'En ligne', 
-    owner: 'Aïcha Sy', 
-    ownerId: 'u5', 
-    features: ['Toit Ouvrant', 'Système Bose', 'V8'], 
-    capacity: 5, 
-    rating: 4.9, 
-    reviews: 8, 
-    coordinates: { lat: 14.7167, lng: -17.4677 }, 
-    blockedDates: [] 
-  },
-  { 
-    id: 10, 
-    title: 'Taxi Aéroport Standard', 
-    location: 'Dakar, Sénégal', 
-    type: 'Voiture', 
-    category: 'Taxi', 
-    price: '25 000 F', 
-    rawPrice: 25000, 
-    image: 'https://images.unsplash.com/photo-1549317661-bd32c8ce0db2?auto=format&fit=crop&w=300&q=80', 
-    status: 'En ligne', 
-    owner: 'Reserva Fleet', 
-    ownerId: 'u2', 
-    features: ['Standard', '3 Personnes', 'Ponctuel'], 
-    capacity: 3, 
-    rating: 4.9, 
-    reviews: 150, 
-    coordinates: { lat: 14.71, lng: -17.46 }, 
-    blockedDates: [] 
-  },
-  { 
     id: 6, 
     title: 'Safari Parc National Kpendjal', 
     location: 'Mandouri, Togo', 
@@ -331,7 +293,12 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
 
   const [allUsers, setAllUsers] = useState<User[]>(() => {
       const saved = localStorage.getItem('reserva_all_users');
-      return saved ? JSON.parse(saved) : MOCK_USERS;
+      const loaded = saved ? JSON.parse(saved) : MOCK_USERS;
+      // Protection Admin : on s'assure que l'admin par défaut est TOUJOURS présent
+      if (!loaded.find((u: User) => u.email === 'admin@reserva.africa')) {
+          return [...loaded, MOCK_USERS[2]];
+      }
+      return loaded;
   });
 
   const [properties, setProperties] = useState<Property[]>(() => {
@@ -366,8 +333,13 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
       const saved = localStorage.getItem('reserva_messages');
       return saved ? JSON.parse(saved) : [];
   });
+
   const [reviews, setReviews] = useState<Review[]>([]);
-  const [transactions, setTransactions] = useState<Transaction[]>([]);
+  const [transactions, setTransactions] = useState<Transaction[]>(() => {
+      const saved = localStorage.getItem('reserva_transactions');
+      return saved ? JSON.parse(saved) : [];
+  });
+  
   const [systemSettings, setSystemSettings] = useState<SystemSettings>({ commissionRate: 15, serviceFeeRate: 15, maintenanceMode: false });
   const [siteAssets, setSiteAssets] = useState<Record<string, SiteAsset>>({
       'site_logo': { id: 'site_logo', name: 'Logo Principal', url: '', category: 'logo' }
@@ -381,8 +353,9 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     localStorage.setItem('reserva_bookings', JSON.stringify(bookings));
     localStorage.setItem('reserva_messages', JSON.stringify(messages));
     localStorage.setItem('reserva_sys_notifs', JSON.stringify(systemNotifications));
+    localStorage.setItem('reserva_transactions', JSON.stringify(transactions));
     if (user) localStorage.setItem('reserva_user', JSON.stringify(user));
-  }, [allUsers, properties, hostApplications, verificationRequests, bookings, user, messages, systemNotifications]);
+  }, [allUsers, properties, hostApplications, verificationRequests, bookings, user, messages, systemNotifications, transactions]);
 
   const addNotification = (type: 'success' | 'error' | 'info', message: string) => {
     const id = Date.now().toString();
